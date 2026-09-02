@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4F46E5"/>
+      <stop offset="1" stop-color="#7C3AED"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+
+  <!-- Commit node on its branch line -->
+  <g stroke="#F8FAFC" stroke-linecap="round" fill="none">
+    <path d="M42 20 V40" stroke-width="13"/>
+    <path d="M42 88 V108" stroke-width="13"/>
+    <circle cx="42" cy="64" r="17" stroke-width="12"/>
+  </g>
+
+  <!-- Sparkle -->
+  <path d="M91 22 C95 44 101 50 123 54 C101 58 95 64 91 86 C87 64 81 58 59 54 C81 50 87 44 91 22 Z"
+        fill="#FDE68A"/>
+</svg>
