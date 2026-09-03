@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { AiCommitError, SELECT_MODEL, SELECT_PROVIDER } from '../errors';
+import { KomitError, SELECT_MODEL, SELECT_PROVIDER } from '../errors';
 import type { Provider, ProviderProfile } from './types';
 
 /** Shared request plumbing for the HTTP-based provider classes. */
@@ -21,7 +21,7 @@ abstract class HttpProvider implements Provider {
 	protected get baseUrl(): string {
 		const url = this.profile.baseUrl;
 		if (!url) {
-			throw new AiCommitError(`Provider "${this.profile.label}" has no base URL configured.`, [SELECT_PROVIDER]);
+			throw new KomitError(`Provider "${this.profile.label}" has no base URL configured.`, [SELECT_PROVIDER]);
 		}
 		return url.replace(/\/+$/, '');
 	}
@@ -41,11 +41,11 @@ abstract class HttpProvider implements Provider {
 				throw new vscode.CancellationError();
 			}
 			if (err instanceof Error && err.name === 'AbortError') {
-				throw new AiCommitError(
-					`${this.destination} did not respond within ${Math.round(this.timeoutMs / 1000)}s. Change aicommit.timeoutSeconds to allow longer.`,
+				throw new KomitError(
+					`${this.destination} did not respond within ${Math.round(this.timeoutMs / 1000)}s. Change komit.timeoutSeconds to allow longer.`,
 				);
 			}
-			throw new AiCommitError(`Could not reach ${this.destination}: ${err instanceof Error ? err.message : String(err)}`);
+			throw new KomitError(`Could not reach ${this.destination}: ${err instanceof Error ? err.message : String(err)}`);
 		} finally {
 			clearTimeout(timer);
 			subscription.dispose();
@@ -58,26 +58,26 @@ abstract class HttpProvider implements Provider {
 		return response.json();
 	}
 
-	private async describeFailure(response: Response): Promise<AiCommitError> {
+	private async describeFailure(response: Response): Promise<KomitError> {
 		const body = await response.text().catch(() => '');
 		const detail = body.slice(0, 300).trim();
 
 		switch (response.status) {
 			case 401:
 			case 403:
-				return new AiCommitError(
+				return new KomitError(
 					`${this.destination} rejected the API key. Re-enter it for "${this.profile.label}".`,
 					[SELECT_PROVIDER],
 				);
 			case 404:
-				return new AiCommitError(
+				return new KomitError(
 					`${this.destination} does not know the model "${this.profile.model}". Pick a different one.`,
 					[SELECT_MODEL],
 				);
 			case 429:
-				return new AiCommitError(`${this.destination} is rate limiting this key. Wait and try again.`);
+				return new KomitError(`${this.destination} is rate limiting this key. Wait and try again.`);
 			default:
-				return new AiCommitError(`${this.destination} returned ${response.status}. ${detail}`);
+				return new KomitError(`${this.destination} returned ${response.status}. ${detail}`);
 		}
 	}
 }
@@ -109,7 +109,7 @@ export class OpenAiProvider extends HttpProvider {
 
 		const text = json.choices?.[0]?.message?.content;
 		if (!text) {
-			throw new AiCommitError(`${this.destination} returned an empty response.`);
+			throw new KomitError(`${this.destination} returned an empty response.`);
 		}
 		return text;
 	}
@@ -152,7 +152,7 @@ export class AnthropicProvider extends HttpProvider {
 
 		const text = json.content?.find(block => block.type === 'text')?.text;
 		if (!text) {
-			throw new AiCommitError(`${this.destination} returned an empty response.`);
+			throw new KomitError(`${this.destination} returned an empty response.`);
 		}
 		return text;
 	}

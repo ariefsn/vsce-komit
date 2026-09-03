@@ -21,7 +21,7 @@ export async function pickProvider(activeId: string | undefined): Promise<Provid
 	items.push({ label: '$(add) Add a provider…', addNew: true });
 
 	const picked = await vscode.window.showQuickPick(items, {
-		title: 'AI Commit: select provider',
+		title: 'Komit: select provider',
 		placeHolder: profiles.length ? 'Switch the active provider' : 'No providers configured yet',
 	});
 

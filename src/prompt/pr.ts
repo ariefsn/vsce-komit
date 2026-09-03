@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { bullets, type Limits } from './default';
 
-const PR_FILES = ['.aicommit-pr.md', '.github/pull_request_template.md'];
+const PR_FILES = ['.komit-pr.md', '.github/pull_request_template.md'];
 
 export function buildPrPrompt(limits: Limits): string {
 	return `Write a pull request title and description for the branch below.
@@ -71,13 +71,13 @@ export async function resolvePrPrompt(repoRoot: vscode.Uri, limits: Limits): Pro
 			if (!text) {
 				continue;
 			}
-			// A dedicated .aicommit-pr.md is already a prompt; GitHub's template is
+			// A dedicated .komit-pr.md is already a prompt; GitHub's template is
 			// a document to fill in, so it gets wrapped with instructions.
 			return name === PR_FILES[0] ? text : TEMPLATE_PREFIX + text + TEMPLATE_SUFFIX;
 		}
 	}
 
-	const configured = vscode.workspace.getConfiguration('aicommit').get<string>('prPrompt');
+	const configured = vscode.workspace.getConfiguration('komit').get<string>('prPrompt');
 	return configured?.trim() ? configured : buildPrPrompt(limits);
 }
 

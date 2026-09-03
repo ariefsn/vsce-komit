@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import * as vscode from 'vscode';
-import { AiCommitError } from '../errors';
+import { KomitError } from '../errors';
 import type { Provider, ProviderProfile } from './types';
 
 export class CliProvider implements Provider {
@@ -13,7 +13,7 @@ export class CliProvider implements Provider {
 	generate(instruction: string, token: vscode.CancellationToken): Promise<string> {
 		const command = this.profile.command;
 		if (!command) {
-			throw new AiCommitError(`Provider "${this.profile.label}" has no command configured.`);
+			throw new KomitError(`Provider "${this.profile.label}" has no command configured.`);
 		}
 
 		const args = [...(this.profile.promptArgs ?? []), ...(this.profile.extraArgs ?? [])];
@@ -35,8 +35,8 @@ export class CliProvider implements Provider {
 
 			const timer = setTimeout(() => {
 				child.kill();
-				finish(() => reject(new AiCommitError(
-					`${command} did not respond within ${Math.round(this.timeoutMs / 1000)}s. Change aicommit.timeoutSeconds to allow longer.`,
+				finish(() => reject(new KomitError(
+					`${command} did not respond within ${Math.round(this.timeoutMs / 1000)}s. Change komit.timeoutSeconds to allow longer.`,
 				)));
 			}, this.timeoutMs);
 
@@ -50,10 +50,10 @@ export class CliProvider implements Provider {
 
 			child.on('error', (err: NodeJS.ErrnoException) => {
 				finish(() => reject(err.code === 'ENOENT'
-					? new AiCommitError(
-						`"${command}" was not found on PATH. The editor does not always inherit your shell's PATH, so try launching it from a terminal, or set an absolute path in aicommit.providers.`,
+					? new KomitError(
+						`"${command}" was not found on PATH. The editor does not always inherit your shell's PATH, so try launching it from a terminal, or set an absolute path in komit.providers.`,
 					)
-					: new AiCommitError(`Could not start ${command}: ${err.message}`),
+					: new KomitError(`Could not start ${command}: ${err.message}`),
 				));
 			});
 
@@ -62,11 +62,11 @@ export class CliProvider implements Provider {
 					if (code !== 0) {
 						const detail = stderr.trim() || `exit code ${code}`;
 						reject(/not.*(logged in|authenticated)|unauthorized|login/i.test(detail)
-							? new AiCommitError(`${command} is not authenticated. Run "${command}" once in a terminal to log in.`)
-							: new AiCommitError(`${command} failed: ${detail}`),
+							? new KomitError(`${command} is not authenticated. Run "${command}" once in a terminal to log in.`)
+							: new KomitError(`${command} failed: ${detail}`),
 						);
 					} else if (!stdout.trim()) {
-						reject(new AiCommitError(`${command} returned nothing.`));
+						reject(new KomitError(`${command} returned nothing.`));
 					} else {
 						resolve(stdout);
 					}

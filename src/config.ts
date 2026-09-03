@@ -5,7 +5,7 @@ import { DEFAULT_TICKET_PATTERN, extractTicket } from './ticket';
 export type PrivacyNotice = 'once' | 'always' | 'never';
 
 function config() {
-	return vscode.workspace.getConfiguration('aicommit');
+	return vscode.workspace.getConfiguration('komit');
 }
 
 function counts(key: string, fallback: number[]): number[] {

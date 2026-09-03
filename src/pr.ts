@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { limits } from './config';
-import { AiCommitError } from './errors';
+import { KomitError } from './errors';
 import { getGitAPI } from './git/api';
 import { collectBranchContext, listBranches, resolveBaseBranch, resolveRepository } from './git/repository';
 import { normalize } from './normalize';
@@ -12,15 +12,15 @@ import { runSetup } from './ui/setup';
 export async function generatePr(context: vscode.ExtensionContext, rootUri: vscode.Uri | undefined): Promise<void> {
 	const api = await getGitAPI();
 	if (!api) {
-		throw new AiCommitError('The built-in Git extension is not available.');
+		throw new KomitError('The built-in Git extension is not available.');
 	}
 
 	const repo = resolveRepository(api, rootUri);
 	if (!repo) {
-		throw new AiCommitError('No Git repository is open.');
+		throw new KomitError('No Git repository is open.');
 	}
 
-	const config = vscode.workspace.getConfiguration('aicommit');
+	const config = vscode.workspace.getConfiguration('komit');
 	const cwd = repo.rootUri.fsPath;
 
 	const base = await resolveBaseBranch(api.git.path, cwd, config.get<string>('baseBranch') ?? '')
@@ -51,7 +51,7 @@ export async function generatePr(context: vscode.ExtensionContext, rootUri: vsco
 		});
 
 		if (branch.commits.length === 0) {
-			throw new AiCommitError(`This branch has no commits that ${base} does not already have.`);
+			throw new KomitError(`This branch has no commits that ${base} does not already have.`);
 		}
 
 		const vars: TemplateVars = {
@@ -80,13 +80,13 @@ export async function generatePr(context: vscode.ExtensionContext, rootUri: vsco
 	await vscode.env.clipboard.writeText(description);
 	const document = await vscode.workspace.openTextDocument({ content: description, language: 'markdown' });
 	await vscode.window.showTextDocument(document, { preview: false });
-	vscode.window.showInformationMessage('AI Commit: PR description copied to the clipboard.');
+	vscode.window.showInformationMessage('Komit: PR description copied to the clipboard.');
 }
 
 async function askForBase(gitPath: string, cwd: string): Promise<string | undefined> {
 	const branches = await listBranches(gitPath, cwd);
 	if (branches.length === 0) {
-		throw new AiCommitError('Could not work out which branch to compare against. Set aicommit.baseBranch.');
+		throw new KomitError('Could not work out which branch to compare against. Set komit.baseBranch.');
 	}
 
 	return vscode.window.showQuickPick(branches, {

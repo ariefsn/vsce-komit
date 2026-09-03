@@ -6,12 +6,12 @@ export interface ErrorAction {
 }
 
 /** An error with a next step attached, per FR-16. */
-export class AiCommitError extends Error {
+export class KomitError extends Error {
 	readonly actions: ErrorAction[];
 
 	constructor(message: string, actions: ErrorAction[] = []) {
 		super(message);
-		this.name = 'AiCommitError';
+		this.name = 'KomitError';
 		this.actions = actions;
 	}
 }
@@ -23,12 +23,12 @@ export const MANAGE_TRUST: ErrorAction = {
 
 export const SELECT_PROVIDER: ErrorAction = {
 	title: 'Select Provider',
-	command: 'aicommit.selectProvider',
+	command: 'komit.selectProvider',
 };
 
 export const SELECT_MODEL: ErrorAction = {
 	title: 'Select Model',
-	command: 'aicommit.selectModel',
+	command: 'komit.selectModel',
 };
 
 export async function showError(error: unknown): Promise<void> {
@@ -36,12 +36,12 @@ export async function showError(error: unknown): Promise<void> {
 		return;
 	}
 
-	const err = error instanceof AiCommitError
+	const err = error instanceof KomitError
 		? error
-		: new AiCommitError(error instanceof Error ? error.message : String(error));
+		: new KomitError(error instanceof Error ? error.message : String(error));
 
 	const picked = await vscode.window.showErrorMessage(
-		`AI Commit: ${err.message}`,
+		`Komit: ${err.message}`,
 		...err.actions.map(a => a.title),
 	);
 

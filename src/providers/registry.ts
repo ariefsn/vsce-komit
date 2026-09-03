@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import * as vscode from 'vscode';
-import { AiCommitError, MANAGE_TRUST, SELECT_PROVIDER } from '../errors';
+import { KomitError, MANAGE_TRUST, SELECT_PROVIDER } from '../errors';
 import { CliProvider } from './cli';
 import { AnthropicProvider, OpenAiProvider } from './http';
 import type { Provider, ProviderProfile } from './types';
@@ -26,11 +26,11 @@ export const HOSTED_PRESETS: ProviderProfile[] = [
 ];
 
 export function getProfiles(): ProviderProfile[] {
-	return vscode.workspace.getConfiguration('aicommit').get<ProviderProfile[]>('providers') ?? [];
+	return vscode.workspace.getConfiguration('komit').get<ProviderProfile[]>('providers') ?? [];
 }
 
 export function getActiveProfile(): ProviderProfile | undefined {
-	const id = vscode.workspace.getConfiguration('aicommit').get<string>('activeProvider');
+	const id = vscode.workspace.getConfiguration('komit').get<string>('activeProvider');
 	if (!id) {
 		return undefined;
 	}
@@ -38,7 +38,7 @@ export function getActiveProfile(): ProviderProfile | undefined {
 }
 
 export async function saveProfile(profile: ProviderProfile, makeActive: boolean): Promise<void> {
-	const config = vscode.workspace.getConfiguration('aicommit');
+	const config = vscode.workspace.getConfiguration('komit');
 	const profiles = getProfiles().filter(p => p.id !== profile.id);
 	profiles.push(profile);
 
@@ -49,7 +49,7 @@ export async function saveProfile(profile: ProviderProfile, makeActive: boolean)
 }
 
 export function secretKey(profileId: string): string {
-	return `aicommit.apiKey.${profileId}`;
+	return `komit.apiKey.${profileId}`;
 }
 
 /** Probes PATH so the setup QuickPick can list CLI agents the user already has. */
@@ -76,7 +76,7 @@ export async function createProvider(
 	if (profile.type === 'cli') {
 		// FR-19: a repository must never be able to choose a binary to run.
 		if (!vscode.workspace.isTrusted) {
-			throw new AiCommitError(
+			throw new KomitError(
 				`"${profile.label}" runs a program, which is blocked in an untrusted workspace. Trust this folder, or switch to an API provider.`,
 				[MANAGE_TRUST, SELECT_PROVIDER],
 			);
