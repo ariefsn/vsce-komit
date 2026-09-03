@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.1]
+
+- Add Marketplace and Open VSX badges to the README
+- Point the repository and issue links at `vsce-komit`, the repo's current name
+
 ## [0.4.0]
 
 - Rename the extension to Komit, published as `ariefsn.komit`. The old name was already taken on the Marketplace

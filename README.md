@@ -1,5 +1,8 @@
 # Komit
 
+[![VS Marketplace](https://img.shields.io/badge/VS_Marketplace-ariefsn.komit-0098FF?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=ariefsn.komit)
+[![Open VSX](https://img.shields.io/badge/Open_VSX-ariefsn.komit-A60EE5?logo=eclipseide&logoColor=white)](https://open-vsx.org/extension/ariefsn/komit)
+
 Commit messages and PR descriptions written from your actual changes, using whatever AI provider you already have.
 
 ```text
@@ -22,11 +25,11 @@ feat(PAP-51): add commit message generation
 1. Stage some changes.
 2. Click the Komit icon in the Source Control toolbar, just above the commit box. It is the git-commit icon, a circle on a line, and its tooltip reads **Komit: Generate Commit Message**.
 
-   ![The Komit button in the Source Control toolbar](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/commit-button.png)
+   ![The Komit button in the Source Control toolbar](https://raw.githubusercontent.com/ariefsn/vsce-komit/main/assets/showcase/commit-button.png)
 
 3. Pick a provider. Any AI CLI already on your `PATH` (`claude`, `codex`, `gemini`, `opencode`) shows up first and needs no API key, because it uses the CLI's own login. The ones you do not have sit lower in the list, under **CLI agents (not detected on PATH)**.
 
-   ![Choosing a provider on first run](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-provider-engine.png)
+   ![Choosing a provider on first run](https://raw.githubusercontent.com/ariefsn/vsce-komit/main/assets/showcase/select-provider-engine.png)
 
 4. The message lands in the commit box. Edit it if you want, then commit.
 
@@ -55,7 +58,7 @@ Nothing below this line is required.
 - Komit: Open Settings
   > Jump to the settings page.
 
-![The Komit commands in the Command Palette](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/pr-generation.png)
+![The Komit commands in the Command Palette](https://raw.githubusercontent.com/ariefsn/vsce-komit/main/assets/showcase/pr-generation.png)
 
 ## Providers
 
@@ -69,11 +72,11 @@ Those are the profiles that ship ready to use. The `openai` class takes any base
 
 Keep as many as you like and switch in one command. A cheap fast model for routine commits, something stronger when it matters.
 
-![Switching the active provider](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-provider.png)
+![Switching the active provider](https://raw.githubusercontent.com/ariefsn/vsce-komit/main/assets/showcase/select-provider.png)
 
 Defaults aim at the cheapest model that still writes something good. Change it with **Komit: Select Model**, which lists whatever the provider offers:
 
-![Picking a model](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-model.png)
+![Picking a model](https://raw.githubusercontent.com/ariefsn/vsce-komit/main/assets/showcase/select-model.png)
 
 If an endpoint has no model catalogue, the picker quietly falls back to typing the name yourself.
 
@@ -94,7 +97,7 @@ feat(PAP-51): rework auth with token refresh
 - Covers the refresh path and expiry boundary with unit tests
 ```
 
-![A generated PR description open in the editor](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/pr-generation-result.png)
+![A generated PR description open in the editor](https://raw.githubusercontent.com/ariefsn/vsce-komit/main/assets/showcase/pr-generation-result.png)
 
 It reads your commits for the story, the file summary for scope, and the diff for detail. Changes are grouped by concern rather than listed file by file, so the description stays about the same length whether the branch touched 3 files or 30.
 
@@ -102,7 +105,7 @@ The diff comes from the merge base (`base...HEAD`), so anything that landed on t
 
 Base branch detection tries `origin/HEAD`, then `main`, `master` and `develop`. Pin it with `komit.baseBranch` if that guesses wrong. Whichever branch it picks gets named in the progress message, so a bad guess is visible rather than silent:
 
-![Progress notification naming the base branch](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/pr-generation-start.png)
+![Progress notification naming the base branch](https://raw.githubusercontent.com/ariefsn/vsce-komit/main/assets/showcase/pr-generation-start.png)
 
 If your repository has a `.github/pull_request_template.md`, that structure gets filled in instead of the default sections.
 
