@@ -9,7 +9,7 @@ interface Choice extends vscode.QuickPickItem {
 	action: 'settings' | 'repo' | 'reset';
 }
 
-/** AI Commit: Edit Prompt — surfaces the FR-7 override paths (§5.1). */
+/** Surfaces the prompt override paths so people can find them. */
 export async function editPrompt(repoRoot: vscode.Uri | undefined): Promise<void> {
 	const repoFile = repoRoot ? vscode.Uri.joinPath(repoRoot, REPO_FILES[0]) : undefined;
 	const repoFileExists = repoRoot ? Boolean(await readRepoInstructions(repoRoot)) : false;
@@ -25,7 +25,7 @@ export async function editPrompt(repoRoot: vscode.Uri | undefined): Promise<void
 	if (repoFile) {
 		choices.push(repoFileExists
 			? { label: `$(go-to-file) Open ${REPO_FILES[0]}`, detail: 'Already present in this repository', action: 'repo' }
-			: { label: `$(new-file) Create ${REPO_FILES[0]} for this repository`, detail: 'Travels with the repo — every contributor gets it', action: 'repo' },
+			: { label: `$(new-file) Create ${REPO_FILES[0]} for this repository`, detail: 'Travels with the repo, so every contributor gets it', action: 'repo' },
 		);
 	}
 
@@ -53,7 +53,7 @@ export async function editPrompt(repoRoot: vscode.Uri | undefined): Promise<void
 	}
 }
 
-/** Seeds the file with the resolved default so customizing means editing, not authoring. */
+/** Seeds the file with the current default so there is something to edit. */
 async function openRepoFile(uri: vscode.Uri, exists: boolean): Promise<void> {
 	if (!exists) {
 		const seed = buildDefaultPrompt(styleOptions())
@@ -86,7 +86,7 @@ interface SignatureChoice extends vscode.QuickPickItem {
 	action: 'coauthor' | 'custom' | 'remove' | 'settings';
 }
 
-/** AI Commit: Edit Signature — trailers without hand-writing JSON. */
+/** Edits trailers without anyone having to hand-write JSON. */
 export async function editSignature(gitPath: string | undefined, repoRoot: vscode.Uri | undefined): Promise<void> {
 	const config = vscode.workspace.getConfiguration('aicommit');
 	const current = config.get<string[]>('signature') ?? [];

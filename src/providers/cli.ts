@@ -51,7 +51,7 @@ export class CliProvider implements Provider {
 			child.on('error', (err: NodeJS.ErrnoException) => {
 				finish(() => reject(err.code === 'ENOENT'
 					? new AiCommitError(
-						`"${command}" was not found on PATH. The editor does not always inherit your shell's PATH — launch it from a terminal, or set an absolute path in aicommit.providers.`,
+						`"${command}" was not found on PATH. The editor does not always inherit your shell's PATH, so try launching it from a terminal, or set an absolute path in aicommit.providers.`,
 					)
 					: new AiCommitError(`Could not start ${command}: ${err.message}`),
 				));

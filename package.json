@@ -3,7 +3,7 @@
   "displayName": "AI Commit",
   "description": "Generate commit messages and PR descriptions from your changes, using any AI provider.",
   "icon": "assets/icon.png",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "ariefsn",
   "license": "MIT",
   "engines": {
@@ -80,7 +80,12 @@
         "aicommit.privacyNotice",
         "aicommit.baseBranch",
         "aicommit.prPrompt",
-        "aicommit.maxPrDiffBytes"
+        "aicommit.maxPrDiffBytes",
+        "aicommit.limits.bodyBullets",
+        "aicommit.limits.prSummaryBullets",
+        "aicommit.limits.prChangesBullets",
+        "aicommit.limits.bulletChars",
+        "aicommit.limits.subjectChars"
       ]
     },
     "virtualWorkspaces": false
@@ -96,10 +101,7 @@
         "title": "Generate Commit Message",
         "category": "AI Commit",
         "enablement": "aicommit.hasStagedChanges",
-        "icon": {
-          "light": "assets/toolbar-light.svg",
-          "dark": "assets/toolbar-dark.svg"
-        }
+        "icon": "$(git-commit)"
       },
       {
         "command": "aicommit.regenerate",
@@ -165,7 +167,7 @@
         "aicommit.providers": {
           "type": "array",
           "default": [],
-          "markdownDescription": "Configured backends. Add these with **AI Commit: Select Provider** rather than by hand — API keys are stored in the OS keychain and never appear here.",
+          "markdownDescription": "Configured providers. Add these with **AI Commit: Select Provider** rather than by hand. API keys are stored in the OS keychain and never appear here.",
           "items": {
             "type": "object",
             "required": [
@@ -189,7 +191,7 @@
                   "openai",
                   "anthropic"
                 ],
-                "description": "Backend class."
+                "description": "Provider class."
               },
               "model": {
                 "type": "string",
@@ -248,7 +250,7 @@
             "chore",
             "revert"
           ],
-          "markdownDescription": "Allowed commit types. The defaults are the Conventional Commits set — add your own (for example `hotfix`) if your team uses them, but note that commit linters may reject non-standard types."
+          "markdownDescription": "Allowed commit types. The defaults are the Conventional Commits set. Add your own, `hotfix` for example, if your team uses them, but note that commit linters may reject non-standard types."
         },
         "aicommit.bodyStyle": {
           "type": "string",
@@ -275,7 +277,7 @@
           ],
           "enumDescriptions": [
             "Ticket key from the branch when there is one, otherwise the code area",
-            "Ticket key only — no scope when the branch has none",
+            "Ticket key only, with no scope when the branch has none",
             "Always derive the scope from the changed files",
             "Never include a scope"
           ],
@@ -285,7 +287,7 @@
         "aicommit.ticketPattern": {
           "type": "string",
           "default": "[A-Za-z]{2,}[A-Za-z0-9]*-\\d+",
-          "markdownDescription": "Regular expression matched against the branch name to find a ticket key. The default matches Jira/Linear style keys such as `PAP-51` in `feat/PAP-51-add-login`. It requires two leading letters so that branches like `release/v2-1` are not mistaken for tickets."
+          "markdownDescription": "Regular expression matched against the branch name to find a ticket key. The default matches Jira and Linear style keys such as `PAP-51` in `feat/PAP-51-add-login`. It requires two leading letters so branches like `release/v2-1` are not mistaken for tickets."
         },
         "aicommit.ticketUppercase": {
           "type": "boolean",
@@ -307,19 +309,73 @@
           "default": "once",
           "description": "How often to confirm before your staged diff is sent to a provider."
         },
+        "aicommit.limits.bodyBullets": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "default": [
+            2,
+            4
+          ],
+          "markdownDescription": "How many bullets in a commit body. `[2, 4]` asks for two to four. Use `[1]` for exactly one."
+        },
+        "aicommit.limits.prSummaryBullets": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "default": [
+            1,
+            2
+          ],
+          "markdownDescription": "How many bullets in the PR Summary section."
+        },
+        "aicommit.limits.prChangesBullets": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 1
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "default": [
+            3,
+            6
+          ],
+          "markdownDescription": "How many bullets in the PR Changes section. Keeping this small is what stops long branches producing one bullet per file."
+        },
+        "aicommit.limits.bulletChars": {
+          "type": "number",
+          "minimum": 20,
+          "default": 80,
+          "description": "Rough character limit for a single bullet."
+        },
+        "aicommit.limits.subjectChars": {
+          "type": "number",
+          "minimum": 20,
+          "default": 72,
+          "description": "Character limit for the commit subject line. 72 is the git convention."
+        },
         "aicommit.signature": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Git trailers appended to every message, for example `Co-authored-by: Name <you@example.com>`. Added after generation so they are exact, and template variables such as `{{branch}}` work. Edit them with **AI Commit: Edit Signature**."
+          "markdownDescription": "Git trailers appended to every message, such as `Co-authored-by: Name <you@example.com>`. They are added after generation so the text is exact, and template variables like `{{branch}}` work. Edit them with **AI Commit: Edit Signature**."
         },
         "aicommit.prompt": {
           "type": "string",
           "default": "",
           "editPresentation": "multilineText",
-          "markdownDescription": "Override the built-in prompt. Supports `{{diff}}`, `{{stat}}`, `{{recentCommits}}`, `{{branch}}`, `{{userHint}}`, `{{language}}` and `{{styleRules}}`. A repository's `.aicommit.md` takes precedence over this. A template that does not use `{{styleRules}}` also overrides the style settings above."
+          "markdownDescription": "Override the built-in prompt. Supports `{{diff}}`, `{{stat}}`, `{{recentCommits}}`, `{{branch}}`, `{{userHint}}`, `{{language}}`, `{{ticket}}` and `{{styleRules}}`. A repository's `.aicommit.md` takes precedence over this. A template that leaves out `{{styleRules}}` also overrides the style settings above."
         },
         "aicommit.language": {
           "type": "string",
@@ -329,7 +385,7 @@
         "aicommit.baseBranch": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Branch that pull requests target. Leave empty to detect it from `origin/HEAD`, then `main`, `master` or `develop`."
+          "markdownDescription": "Branch that pull requests target. Leave it empty to detect it from `origin/HEAD`, then `main`, `master` or `develop`."
         },
         "aicommit.prPrompt": {
           "type": "string",
@@ -340,14 +396,14 @@
         "aicommit.maxPrDiffBytes": {
           "type": "number",
           "default": 120000,
-          "description": "Diff budget for PR descriptions. Larger than the commit budget, since a branch diff spans many commits."
+          "description": "Diff budget for PR descriptions. It is larger than the commit budget because a branch diff spans many commits."
         },
         "aicommit.excludeGlobs": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "markdownDescription": "Paths excluded from the diff before it is sent. Replaces the built-in list; use `#aicommit.excludeGlobs.additional#` to extend it instead.",
+          "markdownDescription": "Paths excluded from the diff before it is sent. This replaces the built-in list. To extend it instead, use `#aicommit.excludeGlobs.additional#`.",
           "default": [
             "**/.env",
             "**/.env.*",
@@ -442,7 +498,7 @@
             "**/.env.template",
             "**/.env.dist"
           ],
-          "markdownDescription": "Paths sent even though `#aicommit.excludeGlobs#` matches them. Git pathspec cannot re-include an excluded path, so these are collected by a second diff pass — which is how `.env` stays out while `.env.example` still reaches the model."
+          "markdownDescription": "Paths sent even though `#aicommit.excludeGlobs#` matches them. Git pathspec cannot re-include an excluded path, so these come from a second diff pass. That is how `.env` stays out while `.env.example` still reaches the model."
         },
         "aicommit.recentCommitCount": {
           "type": "number",

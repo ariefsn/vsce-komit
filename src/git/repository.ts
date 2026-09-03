@@ -59,10 +59,9 @@ export async function collectContext(
 	const cwd = repo.rootUri.fsPath;
 	const pathspecs = toPathspecs(options.excludeGlobs);
 
-	// Git pathspec has no re-include — an exclusion always beats a positive
-	// pathspec for the same path — so anything in includeGlobs needs its own
-	// pass, which is then concatenated. This is what keeps .env excluded while
-	// .env.example still reaches the model.
+	// Git pathspec has no re-include, and an exclusion always beats a positive
+	// pathspec for the same path. So includeGlobs needs its own pass, which gets
+	// concatenated. That is what keeps .env out while .env.example still goes.
 	const included = options.includeGlobs.filter(g => g.trim());
 	const includeSpecs = included.map(g => `:(glob)${g.trim()}`);
 	const extra = (args: string[]) => includeSpecs.length
@@ -105,8 +104,8 @@ export interface BranchContext {
 }
 
 /**
- * Resolves the branch a PR would target. A wrong base silently produces a
- * description of somebody else's work, so the result is surfaced to the user.
+ * Resolves the branch a PR would target. A wrong base quietly produces a
+ * description of somebody else's work, so the result is shown to the user.
  */
 export async function resolveBaseBranch(
 	gitPath: string,

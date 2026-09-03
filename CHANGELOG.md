@@ -1,5 +1,11 @@
 # Change Log
 
+## [0.3.1]
+
+- Use a codicon for the toolbar button, which fixes it sometimes rendering blank
+- Make bullet counts and line lengths configurable under `aicommit.limits`
+- Say "provider" everywhere instead of mixing it with "backend"
+
 ## [0.3.0]
 
 - Generate a PR title and description for the whole branch, opened in an editor and copied to the clipboard
@@ -14,7 +20,7 @@
 
 - Use the ticket key from the branch name as the scope, e.g. `feat(PAP-51):`
 - Exclude `.env`, private keys and other secret files by default, while still sending `.env.example`
-- Add `AI Commit: Configure` — every setting in one place, at user or workspace scope
+- Add `AI Commit: Configure`, putting every setting in one place at user or workspace scope
 - Make the privacy notice configurable: once, always, or never
 - Drop trailers whose variables resolve to nothing, instead of committing a bare `Refs:`
 

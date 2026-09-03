@@ -10,8 +10,7 @@ interface ProfileItem extends vscode.QuickPickItem {
 export async function pickProvider(activeId: string | undefined): Promise<ProviderProfile | 'add-new' | undefined> {
 	const profiles = getProfiles();
 
-	// The marker goes in the label, not detail — detail always renders as a
-	// second row, which leaves the active item looking detached.
+	// detail always renders on a second row, so the check goes in the label.
 	const items: ProfileItem[] = profiles.map(profile => ({
 		label: profile.id === activeId ? `$(check) ${profile.label}` : profile.label,
 		description: profile.model ?? profile.command,
@@ -34,7 +33,7 @@ export async function pickProvider(activeId: string | undefined): Promise<Provid
 
 /**
  * Model picker (FR-6). Queries the provider's catalogue where the protocol supports
- * it, and degrades to free text — without an error toast — where it does not.
+ * it. Where it does not, this falls back to free text without an error toast.
  */
 export async function pickModel(profile: ProviderProfile, secrets: vscode.SecretStorage): Promise<string | undefined> {
 	const models = await listModelsQuietly(profile, secrets);

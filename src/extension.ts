@@ -156,7 +156,7 @@ async function run(
 
 	let instruction = render(await resolvePrompt(repo.rootUri), vars);
 	if (regenerate && existing) {
-		instruction += `\n\nYou previously suggested the message below and it was rejected. Write a genuinely different one — a different angle or emphasis, not a rephrasing.\n\n${existing}\n`;
+		instruction += `\n\nYou previously suggested the message below and it was rejected. Write a genuinely different one, taking a different angle or emphasis.\n\n${existing}\n`;
 	}
 
 	if (token.isCancellationRequested) {
@@ -211,7 +211,7 @@ async function acknowledgeDestination(context: vscode.ExtensionContext, provider
 		`AI Commit will send your staged diff to ${provider.destination}.`,
 		{
 			modal: true,
-			detail: 'This happens every time you generate a message. Common secret files (.env, private keys) are excluded by default, but exclusions are a filter, not a guarantee — a secret committed inside an ordinary source file would still be sent.',
+			detail: 'This happens every time you generate a message. Common secret files (.env, private keys) are excluded by default, but exclusions only go so far. A secret committed inside an ordinary source file would still be sent.',
 		},
 		'Continue',
 	);

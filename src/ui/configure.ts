@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
+import { range } from '../prompt/default';
 
-type SettingType = 'boolean' | 'enum' | 'number' | 'string' | 'array' | 'command';
+type SettingType = 'boolean' | 'enum' | 'number' | 'string' | 'array' | 'range' | 'command';
 
 interface Setting {
 	key: string;
@@ -22,13 +23,19 @@ const SETTINGS: Setting[] = [
 	{ key: 'ticketUppercase', label: 'Uppercase ticket keys', group: 'Message style', type: 'boolean' },
 	{ key: 'language', label: 'Language', group: 'Message style', type: 'string' },
 
+	{ key: 'limits.bodyBullets', label: 'Commit body bullets', group: 'Limits', type: 'range', summary: asRange },
+	{ key: 'limits.prSummaryBullets', label: 'PR summary bullets', group: 'Limits', type: 'range', summary: asRange },
+	{ key: 'limits.prChangesBullets', label: 'PR changes bullets', group: 'Limits', type: 'range', summary: asRange },
+	{ key: 'limits.bulletChars', label: 'Bullet length', group: 'Limits', type: 'number', summary: v => `${v} chars` },
+	{ key: 'limits.subjectChars', label: 'Subject length', group: 'Limits', type: 'number', summary: v => `${v} chars` },
+
 	{ key: 'baseBranch', label: 'PR base branch', group: 'Message style', type: 'string', summary: v => String(v || 'auto-detect') },
 
 	{ key: 'prompt', label: 'Edit prompt…', group: 'Prompt & signature', type: 'command', command: 'aicommit.editPrompt', summary: v => v ? 'custom' : 'built-in' },
 	{ key: 'prPrompt', label: 'PR template', group: 'Prompt & signature', type: 'string', summary: v => v ? 'custom' : 'built-in' },
 	{ key: 'signature', label: 'Edit signature…', group: 'Prompt & signature', type: 'command', command: 'aicommit.editSignature', summary: countOf('trailer') },
 
-	{ key: 'activeProvider', label: 'Provider…', group: 'Provider', type: 'command', command: 'aicommit.selectProvider', summary: v => String(v || '—') },
+	{ key: 'activeProvider', label: 'Provider…', group: 'Provider', type: 'command', command: 'aicommit.selectProvider', summary: v => String(v || 'not set') },
 	{ key: '', label: 'Model…', group: 'Provider', type: 'command', command: 'aicommit.selectModel' },
 
 	{ key: 'excludeGlobs', label: 'Excluded paths', group: 'Diff', type: 'array', summary: countOf('pattern') },
@@ -43,6 +50,10 @@ const SETTINGS: Setting[] = [
 	{ key: 'privacyNotice', label: 'Privacy notice', group: 'Behaviour', type: 'enum', values: ['once', 'always', 'never'] },
 ];
 
+function asRange(value: unknown): string {
+	return Array.isArray(value) ? range(value as number[]) : 'not set';
+}
+
 function countOf(noun: string) {
 	return (value: unknown) => {
 		const n = Array.isArray(value) ? value.length : 0;
@@ -56,7 +67,7 @@ interface Item extends vscode.QuickPickItem {
 	openJson?: boolean;
 }
 
-/** AI Commit: Configure — every setting in one place, each showing its value. */
+/** Every setting in one place, each showing its current value. */
 export async function configure(target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
 	const config = vscode.workspace.getConfiguration('aicommit');
 	const workspaceOpen = (vscode.workspace.workspaceFolders?.length ?? 0) > 0;
@@ -120,7 +131,7 @@ function describe(value: unknown): string {
 	if (Array.isArray(value)) {
 		return value.length ? `${value.slice(0, 3).join(', ')}${value.length > 3 ? ` +${value.length - 3}` : ''}` : 'none';
 	}
-	return value === undefined || value === '' ? '—' : String(value);
+	return value === undefined || value === '' ? 'not set' : String(value);
 }
 
 async function edit(setting: Setting, target: vscode.ConfigurationTarget): Promise<void> {
@@ -172,6 +183,22 @@ async function edit(setting: Setting, target: vscode.ConfigurationTarget): Promi
 			return;
 		}
 
+		case 'range': {
+			// Ranges are two numbers, so add/remove would be clumsy. Take "2-4" or
+			// "3" and store [2, 4] or [3].
+			const value = await vscode.window.showInputBox({
+				title: setting.label,
+				prompt: 'A range like 2-4, or a single number for exactly that many',
+				value: asRange(config.get(setting.key)),
+				validateInput: input => /^\d+(-\d+)?$/.test(input.trim()) ? undefined : 'Enter 2-4 or 3',
+			});
+			if (value) {
+				const parts = value.trim().split('-').map(Number);
+				await config.update(setting.key, parts[1] === parts[0] ? [parts[0]] : parts, target);
+			}
+			return;
+		}
+
 		case 'array':
 			await editArray(setting, target);
 			return;
@@ -186,7 +213,7 @@ async function editArray(setting: Setting, target: vscode.ConfigurationTarget): 
 		{ label: '$(add) Add…', id: 'add' },
 		{ label: '$(trash) Remove…', id: 'remove' },
 		{ label: '$(discard) Reset to default', id: 'reset' },
-	], { title: `${setting.label} — ${current.length} entr${current.length === 1 ? 'y' : 'ies'}` });
+	], { title: `${setting.label}: ${current.length} entr${current.length === 1 ? 'y' : 'ies'}` });
 
 	switch (action?.id) {
 		case 'add': {

@@ -1,10 +1,10 @@
 export const DEFAULT_TICKET_PATTERN = '[A-Za-z]{2,}[A-Za-z0-9]*-\\d+';
 
 /**
- * Pulls a ticket key out of the branch name — `feat/PAP-51-login` → `PAP-51`.
+ * Pulls a ticket key out of the branch name, so `feat/PAP-51-login` gives `PAP-51`.
  *
- * Done here rather than asked of the model: a model told to find the ticket will
- * occasionally reformat it, grab an adjacent number, or invent one when the
+ * This happens here rather than in the prompt. A model told to find the ticket
+ * will sometimes reformat it, grab an adjacent number, or invent one when the
  * branch has none.
  */
 export function extractTicket(branch: string, pattern: string, uppercase: boolean): string | undefined {

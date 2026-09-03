@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { limits } from './config';
 import { AiCommitError } from './errors';
 import { getGitAPI } from './git/api';
 import { collectBranchContext, listBranches, resolveBaseBranch, resolveRepository } from './git/repository';
@@ -68,7 +69,7 @@ export async function generatePr(context: vscode.ExtensionContext, rootUri: vsco
 			ticket: '',
 		};
 
-		const instruction = render(await resolvePrPrompt(repo.rootUri), vars);
+		const instruction = render(await resolvePrPrompt(repo.rootUri, limits()), vars);
 		return token.isCancellationRequested ? undefined : normalize(await provider.generate(instruction, token));
 	});
 

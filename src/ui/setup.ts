@@ -28,7 +28,7 @@ export async function runSetup(secrets: vscode.SecretStorage): Promise<ProviderP
 	if (detected.length) {
 		items.push({ label: 'Installed on this machine', kind: vscode.QuickPickItemKind.Separator });
 		for (const preset of detected) {
-			items.push({ label: preset.label, description: preset.command, detail: 'No API key needed — uses the CLI\'s own login', preset });
+			items.push({ label: preset.label, description: preset.command, detail: 'No API key needed, it uses the CLI\'s own login', preset });
 		}
 	}
 
@@ -49,8 +49,8 @@ export async function runSetup(secrets: vscode.SecretStorage): Promise<ProviderP
 	items.push({ label: '$(add) Add custom provider…', detail: 'Any OpenAI-compatible endpoint', custom: true });
 
 	const picked = await vscode.window.showQuickPick(items, {
-		title: 'AI Commit: choose a backend',
-		placeHolder: 'Which backend should AI Commit use?',
+		title: 'AI Commit: choose a provider',
+		placeHolder: 'Which provider should AI Commit use?',
 		ignoreFocusOut: true,
 	});
 
