@@ -1,23 +1,439 @@
 {
   "name": "aicommit",
-  "displayName": "aicommit",
-  "description": "",
-  "version": "0.0.1",
+  "displayName": "AI Commit",
+  "description": "Generate commit messages from staged changes using any AI provider.",
+  "icon": "assets/icon.png",
+  "version": "0.2.1",
+  "publisher": "ariefsn",
+  "license": "MIT",
   "engines": {
-    "vscode": "^1.134.0"
+    "vscode": "^1.86.0"
   },
-  "categories": [
-    "Other"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ariefsn/vsce-aicommit"
+  },
+  "bugs": {
+    "url": "https://github.com/ariefsn/vsce-aicommit/issues",
+    "email": "ayiexz22@gmail.com"
+  },
+  "author": {
+    "name": "Arief Setiyo Nugroho",
+    "url": "https://github.com/ariefsn"
+  },
+  "maintainers": [
+    {
+      "name": "Arief Setiyo Nugroho",
+      "email": "ayiexz22@gmail.com",
+      "url": "https://github.com/ariefsn"
+    }
   ],
-  "activationEvents": [],
+  "categories": [
+    "SCM Providers",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "commit",
+    "commit-message",
+    "git",
+    "ai",
+    "conventional-commits",
+    "openai",
+    "anthropic",
+    "claude",
+    "gemini",
+    "openrouter",
+    "ollama",
+    "lmstudio",
+    "groq",
+    "deepseek",
+    "qwen",
+    "glm",
+    "zhipu",
+    "sumopod",
+    "vscodium",
+    "source-control"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "In an untrusted workspace, AI Commit ignores workspace-level provider settings and repository-local instruction files, and will not run CLI-based providers.",
+      "restrictedConfigurations": [
+        "aicommit.providers",
+        "aicommit.activeProvider",
+        "aicommit.prompt",
+        "aicommit.excludeGlobs",
+        "aicommit.excludeGlobs.additional",
+        "aicommit.includeGlobs",
+        "aicommit.signature",
+        "aicommit.conventionalCommits",
+        "aicommit.commitTypes",
+        "aicommit.bodyStyle",
+        "aicommit.scopeSource",
+        "aicommit.ticketPattern",
+        "aicommit.ticketUppercase",
+        "aicommit.privacyNotice"
+      ]
+    },
+    "virtualWorkspaces": false
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "aicommit.helloWorld",
-        "title": "Hello World"
+        "command": "aicommit.generate",
+        "title": "Generate Commit Message",
+        "category": "AI Commit",
+        "enablement": "aicommit.hasStagedChanges",
+        "icon": {
+          "light": "assets/toolbar-light.svg",
+          "dark": "assets/toolbar-dark.svg"
+        }
+      },
+      {
+        "command": "aicommit.selectProvider",
+        "title": "Select Provider",
+        "category": "AI Commit"
+      },
+      {
+        "command": "aicommit.selectModel",
+        "title": "Select Model",
+        "category": "AI Commit"
+      },
+      {
+        "command": "aicommit.editPrompt",
+        "title": "Edit Prompt",
+        "category": "AI Commit"
+      },
+      {
+        "command": "aicommit.editSignature",
+        "title": "Edit Signature",
+        "category": "AI Commit"
+      },
+      {
+        "command": "aicommit.configure",
+        "title": "Configure",
+        "category": "AI Commit"
+      },
+      {
+        "command": "aicommit.openSettings",
+        "title": "Open Settings",
+        "category": "AI Commit"
       }
-    ]
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "aicommit.generate",
+          "group": "navigation@-1",
+          "when": "scmProvider == git"
+        }
+      ],
+      "git.commit": [
+        {
+          "command": "aicommit.generate",
+          "group": "4_aicommit@1",
+          "when": "scmProvider == git"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AI Commit",
+      "properties": {
+        "aicommit.providers": {
+          "type": "array",
+          "default": [],
+          "markdownDescription": "Configured backends. Add these with **AI Commit: Select Provider** rather than by hand — API keys are stored in the OS keychain and never appear here.",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "label",
+              "type"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for this profile."
+              },
+              "label": {
+                "type": "string",
+                "description": "Name shown in the picker."
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "cli",
+                  "openai",
+                  "anthropic"
+                ],
+                "description": "Backend class."
+              },
+              "model": {
+                "type": "string",
+                "description": "Model identifier."
+              },
+              "command": {
+                "type": "string",
+                "description": "cli only: the binary to run."
+              },
+              "promptArgs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "cli only: arguments that put the binary into single-prompt mode."
+              },
+              "extraArgs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "cli only: additional arguments."
+              },
+              "baseUrl": {
+                "type": "string",
+                "description": "openai/anthropic only: API base URL."
+              }
+            }
+          }
+        },
+        "aicommit.activeProvider": {
+          "type": "string",
+          "default": "",
+          "description": "Id of the profile currently in use."
+        },
+        "aicommit.conventionalCommits": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Require a `type(scope): summary` subject. Turn off to match the style of the repository's existing commits instead."
+        },
+        "aicommit.commitTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "feat",
+            "fix",
+            "docs",
+            "style",
+            "refactor",
+            "perf",
+            "test",
+            "build",
+            "ci",
+            "chore",
+            "revert"
+          ],
+          "markdownDescription": "Allowed commit types. The defaults are the Conventional Commits set — add your own (for example `hotfix`) if your team uses them, but note that commit linters may reject non-standard types."
+        },
+        "aicommit.bodyStyle": {
+          "type": "string",
+          "enum": [
+            "bullets",
+            "prose",
+            "none"
+          ],
+          "enumDescriptions": [
+            "2-4 short bullet points",
+            "One short paragraph",
+            "Subject line only"
+          ],
+          "default": "bullets",
+          "description": "Shape of the message body below the subject line."
+        },
+        "aicommit.scopeSource": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "ticket",
+            "path",
+            "none"
+          ],
+          "enumDescriptions": [
+            "Ticket key from the branch when there is one, otherwise the code area",
+            "Ticket key only — no scope when the branch has none",
+            "Always derive the scope from the changed files",
+            "Never include a scope"
+          ],
+          "default": "auto",
+          "markdownDescription": "Where the scope in `type(scope):` comes from."
+        },
+        "aicommit.ticketPattern": {
+          "type": "string",
+          "default": "[A-Za-z]{2,}[A-Za-z0-9]*-\\d+",
+          "markdownDescription": "Regular expression matched against the branch name to find a ticket key. The default matches Jira/Linear style keys such as `PAP-51` in `feat/PAP-51-add-login`. It requires two leading letters so that branches like `release/v2-1` are not mistaken for tickets."
+        },
+        "aicommit.ticketUppercase": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Uppercase the extracted key, so `feat/pap-51` still yields `PAP-51` and one ticket never appears two ways in history."
+        },
+        "aicommit.privacyNotice": {
+          "type": "string",
+          "enum": [
+            "once",
+            "always",
+            "never"
+          ],
+          "enumDescriptions": [
+            "Confirm once per provider",
+            "Confirm every time",
+            "Never confirm"
+          ],
+          "default": "once",
+          "description": "How often to confirm before your staged diff is sent to a provider."
+        },
+        "aicommit.signature": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Git trailers appended to every message, for example `Co-authored-by: Name <you@example.com>`. Added after generation so they are exact, and template variables such as `{{branch}}` work. Edit them with **AI Commit: Edit Signature**."
+        },
+        "aicommit.prompt": {
+          "type": "string",
+          "default": "",
+          "editPresentation": "multilineText",
+          "markdownDescription": "Override the built-in prompt. Supports `{{diff}}`, `{{stat}}`, `{{recentCommits}}`, `{{branch}}`, `{{userHint}}`, `{{language}}` and `{{styleRules}}`. A repository's `.aicommit.md` takes precedence over this. A template that does not use `{{styleRules}}` also overrides the style settings above."
+        },
+        "aicommit.language": {
+          "type": "string",
+          "default": "English",
+          "description": "Language the commit message is written in."
+        },
+        "aicommit.excludeGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "markdownDescription": "Paths excluded from the diff before it is sent. Replaces the built-in list; use `#aicommit.excludeGlobs.additional#` to extend it instead.",
+          "default": [
+            "**/.env",
+            "**/.env.*",
+            "**/*.pem",
+            "**/*.key",
+            "**/*.p12",
+            "**/*.pfx",
+            "**/*.keystore",
+            "**/*.jks",
+            "**/id_rsa",
+            "**/id_ed25519",
+            "**/*.lock",
+            "**/package-lock.json",
+            "**/yarn.lock",
+            "**/pnpm-lock.yaml",
+            "**/bun.lockb",
+            "**/go.sum",
+            "**/Cargo.lock",
+            "**/composer.lock",
+            "**/Gemfile.lock",
+            "**/poetry.lock",
+            "**/Pipfile.lock",
+            "**/uv.lock",
+            "**/pubspec.lock",
+            "**/mix.lock",
+            "**/Podfile.lock",
+            "**/gradle.lockfile",
+            "**/packages.lock.json",
+            "**/*.pb.go",
+            "**/*_pb2.py",
+            "**/*_pb2_grpc.py",
+            "**/*.pb.cc",
+            "**/*.pb.h",
+            "**/*_pb.js",
+            "**/*_pb.d.ts",
+            "**/*.pb.dart",
+            "**/*_gen.go",
+            "**/*_generated.go",
+            "**/wire_gen.go",
+            "**/*.g.dart",
+            "**/*.freezed.dart",
+            "**/*.g.cs",
+            "**/*.designer.cs",
+            "**/*.generated.*",
+            "**/__generated__/**",
+            "**/generated/**",
+            "**/build/generated/**",
+            "**/R.java",
+            "**/BuildConfig.java",
+            "**/*_Impl.java",
+            "**/gradle/wrapper/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/out/**",
+            "**/target/**",
+            "**/bin/**",
+            "**/obj/**",
+            "**/.next/**",
+            "**/.nuxt/**",
+            "**/.svelte-kit/**",
+            "**/.output/**",
+            "**/.turbo/**",
+            "**/coverage/**",
+            "**/vendor/**",
+            "**/node_modules/**",
+            "**/Pods/**",
+            "**/*.min.js",
+            "**/*.min.css",
+            "**/*.min.*",
+            "**/*.map",
+            "**/__snapshots__/**",
+            "**/*.snap",
+            "**/*.golden"
+          ]
+        },
+        "aicommit.excludeGlobs.additional": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Extra exclusions appended to the built-in list, so one project-specific pattern does not require copying the whole default array."
+        },
+        "aicommit.includeGlobs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "**/.env.example",
+            "**/.env.sample",
+            "**/.env.template",
+            "**/.env.dist"
+          ],
+          "markdownDescription": "Paths sent even though `#aicommit.excludeGlobs#` matches them. Git pathspec cannot re-include an excluded path, so these are collected by a second diff pass — which is how `.env` stays out while `.env.example` still reaches the model."
+        },
+        "aicommit.recentCommitCount": {
+          "type": "number",
+          "default": 10,
+          "description": "How many recent commit subjects to send, so the message matches the repository's existing style."
+        },
+        "aicommit.maxDiffBytes": {
+          "type": "number",
+          "default": 60000,
+          "description": "Byte budget for the diff. The file summary is always sent in full."
+        },
+        "aicommit.timeoutSeconds": {
+          "type": "number",
+          "default": 90,
+          "description": "How long to wait for the provider before giving up."
+        },
+        "aicommit.overwriteExistingMessage": {
+          "type": "boolean",
+          "default": false,
+          "description": "Discard text already in the commit box instead of treating it as intent to refine."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "yarn run package",
@@ -31,12 +447,17 @@
     "pretest": "yarn run compile-tests && yarn run compile && yarn run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "vsix": "yarn run package && vsce package --no-dependencies",
+    "publish:vsce": "vsce publish --packagePath aicommit-$npm_package_version.vsix",
+    "publish:ovsx": "ovsx publish aicommit-$npm_package_version.vsix"
   },
   "devDependencies": {
-    "@types/vscode": "^1.134.0",
+    "@types/vscode": "^1.86.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "24.x",
+    "@types/node": "18.x",
+    "@vscode/vsce": "^3.2.0",
+    "ovsx": "^0.10.0",
     "typescript-eslint": "^8.61.1",
     "eslint": "^10.5.0",
     "esbuild": "^0.28.1",
@@ -45,7 +466,7 @@
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.0.0"
   },
-  "overrides": {
+  "resolutions": {
     "diff": "^8.0.4",
     "serialize-javascript": "^7.0.6"
   }
