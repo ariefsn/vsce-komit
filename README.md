@@ -1,8 +1,8 @@
 # AI Commit
 
-Commit messages and PR descriptions written from your actual changes — using whatever AI backend you already have.
+Commit messages and PR descriptions written from your actual changes, using whatever AI provider you already have.
 
-```
+```text
 feat(PAP-51): add commit message generation
 
 - Wire the generate button into the Source Control toolbar
@@ -12,37 +12,37 @@ feat(PAP-51): add commit message generation
 
 ## Privacy
 
-- **Your staged diff is sent to whichever provider you configure.** With a hosted API that means it leaves your machine. With a local model (Ollama, LM Studio) or a CLI agent it does not. The extension names the destination and asks for acknowledgement before the first request.
+- **Your staged diff goes to whichever provider you configure.** Hosted APIs receive it. Local models and CLI agents do not. Before the first request, the extension tells you where it is sending things and waits for you to agree.
 - **Zero telemetry.** No analytics, no usage pings, no crash reporting.
-- **API keys live in VS Code's `SecretStorage`**, never in `settings.json`. Set once — it persists across restarts.
-- **Secret files are excluded by default** — `.env`, `*.pem`, `*.key`, `id_rsa` and similar never leave your machine. But exclusions are a filter, not a guarantee: a secret pasted into an ordinary source file would still be sent.
+- **API keys live in the OS keychain** via VS Code's `SecretStorage`. You set one once and it survives restarts.
+- **Secret files are excluded by default.** `.env`, `*.pem`, `*.key`, `id_rsa` and friends never leave your machine. Exclusions only go so far, though. A password pasted into an ordinary source file still gets sent.
 
 ## Getting started
 
 1. Stage some changes.
 2. Click the AI Commit icon in the Source Control toolbar, just above the commit box.
-3. Pick a backend. Any AI CLI already on your `PATH` — `claude`, `codex`, `gemini`, `opencode` — appears at the top and **needs no API key**, because it uses the CLI's own login. That is the fastest route.
+3. Pick a provider. Any AI CLI already on your `PATH` (`claude`, `codex`, `gemini`, `opencode`) shows up first and needs no API key, because it uses the CLI's own login.
 
-   ![Choosing a backend on first run](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-provider-engine.png)
+   ![Choosing a provider on first run](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-provider-engine.png)
 
-4. The message appears in the commit box. Edit it if you like, then commit.
+4. The message lands in the commit box. Edit it if you want, then commit.
 
-Not happy with what you got? **AI Commit: Regenerate Commit Message** asks again for a different angle, rather than rewording the same one.
+If the message misses the point, run **AI Commit: Regenerate Commit Message**. It asks again for a different take on the same changes.
 
-There is no configuration step. Everything below is optional.
+Nothing below this line is required.
 
 ## Commands
 
 - AI Commit: Generate Commit Message
-  > Write a message from the staged changes. Also the toolbar button.
+  > Write a message from the staged changes. This is what the toolbar button runs.
 - AI Commit: Regenerate Commit Message
-  > Not happy with it? Get a genuinely different take, not a rephrasing.
+  > Ask again for a different take.
 - AI Commit: Generate PR Description
   > Write a PR title and description for the whole branch.
 - AI Commit: Configure
   > Every setting in one list, each showing its current value.
 - AI Commit: Select Provider
-  > Switch backends, or add a new one.
+  > Switch providers, or add one.
 - AI Commit: Select Model
   > Pick a model for the active provider.
 - AI Commit: Edit Prompt
@@ -52,29 +52,31 @@ There is no configuration step. Everything below is optional.
 - AI Commit: Open Settings
   > Jump to the settings page.
 
+![The AI Commit commands in the Command Palette](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/pr-generation.png)
+
 ## Providers
 
 | Class | How it talks | Auth | Works with |
 | --- | --- | --- | --- |
-| `cli` | Spawns the binary, context via stdin | The CLI's own login — no API key | `claude`, `codex`, `gemini`, `opencode` |
+| `cli` | Spawns the binary, context over stdin | The CLI's own login, so no API key | `claude`, `codex`, `gemini`, `opencode` |
 | `openai` | `POST {baseUrl}/chat/completions` | Bearer token | OpenAI, OpenRouter, Groq, DeepSeek, GLM (Zhipu), SumoPod, Together, Ollama, LM Studio, vLLM |
 | `anthropic` | `POST {baseUrl}/v1/messages` | `x-api-key` | Anthropic API |
 
-Because the `openai` class takes an arbitrary `baseUrl`, any OpenAI-compatible endpoint works — including ones not listed. Add one via **AI Commit: Select Provider → Add custom provider…**
+The `openai` class takes any base URL, so any OpenAI-compatible endpoint works even if it is not in the list. Add one through **AI Commit: Select Provider → Add custom provider…**
 
-Keep as many as you like and switch between them in one command — a fast cheap model for routine commits, a stronger one when it matters:
+Keep as many as you like and switch in one command. A cheap fast model for routine commits, something stronger when it matters.
 
 ![Switching the active provider](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-provider.png)
 
-Defaults aim at the cheapest model that still writes a good message. Change it with **AI Commit: Select Model**, which lists whatever the provider actually offers:
+Defaults aim at the cheapest model that still writes something good. Change it with **AI Commit: Select Model**, which lists whatever the provider offers:
 
 ![Picking a model](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-model.png)
 
-Where an endpoint has no model catalogue, the picker falls back to plain text entry rather than erroring.
+If an endpoint has no model catalogue, the picker quietly falls back to typing the name yourself.
 
 ## PR descriptions
 
-**AI Commit: Generate PR Description** writes the title and body for a whole branch, opens it in a Markdown editor, and copies it to the clipboard — so it works with the GitHub web UI, the CLI, or any other workflow.
+**AI Commit: Generate PR Description** writes the title and body for a whole branch, opens it in a Markdown editor and copies it to the clipboard, so it works with the GitHub web UI, the `gh` CLI, or anything else.
 
 ```markdown
 feat(PAP-51): rework auth with token refresh
@@ -89,39 +91,57 @@ feat(PAP-51): rework auth with token refresh
 - Covers the refresh path and expiry boundary with unit tests
 ```
 
-![Generating a PR description](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/generate-pr.png)
+![A generated PR description open in the editor](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/pr-generation-result.png)
 
-It reads your commits for the narrative, the file summary for scope, and the diff for detail. Changes are grouped by concern rather than listed per file, so the description stays the same length whether the branch touched 3 files or 30.
+It reads your commits for the story, the file summary for scope, and the diff for detail. Changes are grouped by concern rather than listed file by file, so the description stays about the same length whether the branch touched 3 files or 30.
 
-The diff is taken from the merge base (`base...HEAD`), so anything that landed on the base branch after you branched off stays out of your description.
+The diff comes from the merge base (`base...HEAD`), so anything that landed on the base branch after you branched off stays out of your description.
 
-The base branch is detected from `origin/HEAD`, then `main`, `master` or `develop`; set `aicommit.baseBranch` to pin it, and the branch actually used is named in the progress message. If your repository has a `.github/pull_request_template.md`, that structure is filled in instead of the default sections.
+Base branch detection tries `origin/HEAD`, then `main`, `master` and `develop`. Pin it with `aicommit.baseBranch` if that guesses wrong. Whichever branch it picks gets named in the progress message, so a bad guess is visible rather than silent:
+
+![Progress notification naming the base branch](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/pr-generation-start.png)
+
+If your repository has a `.github/pull_request_template.md`, that structure gets filled in instead of the default sections.
 
 ## Configuring
 
 Three routes, all equivalent:
 
-- **AI Commit: Configure** — every setting in one QuickPick, with a scope switch at the top for user vs. workspace.
-- **Settings UI** — search for "AI Commit".
-- **`settings.json`** — edit directly.
+- **AI Commit: Configure** puts every setting in one list, with a scope switch at the top for user against workspace.
+- **Settings UI**, searching for "AI Commit".
+- **`settings.json`** directly.
 
-Workspace settings give per-repository values, so a work signature in one repo and a personal one in another needs nothing special.
+Workspace settings give you per-repository values, so a work signature in one repo and a personal one in another needs nothing special.
 
 ### Ticket scopes
 
-If your branch names carry a ticket key, it becomes the scope automatically:
+If your branch names carry a ticket key, it becomes the scope on its own:
 
 | Branch | Message |
 | --- | --- |
 | `feat/PAP-51-add-login` | `feat(PAP-51): add login form` |
-| `feat/pap-51-add-login` | `feat(PAP-51): …` — uppercased |
-| `main` | `fix(providers): …` — falls back to the code area |
+| `feat/pap-51-add-login` | `feat(PAP-51): …`, uppercased |
+| `main` | `fix(providers): …`, falling back to the code area |
 
-The key is extracted from the branch name in code, not guessed by the model. Adjust `aicommit.ticketPattern` for other trackers, or set `aicommit.scopeSource` to `ticket`, `path` or `none`.
+The key gets pulled out of the branch name in code, so the model never has to guess at it. Adjust `aicommit.ticketPattern` for other trackers, or set `aicommit.scopeSource` to `ticket`, `path` or `none`.
+
+### Message length
+
+Bullet counts and line lengths are settings, so you can tune the shape without rewriting the prompt:
+
+```jsonc
+// one-line commits with no body
+"aicommit.limits.bodyBullets": [1],
+
+// roomier PR descriptions
+"aicommit.limits.prChangesBullets": [4, 8]
+```
+
+A range like `[2, 4]` asks for two to four. A single number like `[3]` asks for exactly three.
 
 ### Signatures
 
-Add trailers with **AI Commit: Edit Signature**, including "Add `Co-authored-by` from git config" which reads your real name and email:
+Add trailers with **AI Commit: Edit Signature**, which includes an option that reads your name and email straight from git config:
 
 ```jsonc
 "aicommit.signature": [
@@ -130,19 +150,19 @@ Add trailers with **AI Commit: Edit Signature**, including "Add `Co-authored-by`
 ]
 ```
 
-Appended after generation, so they are always byte-exact rather than paraphrased. A trailer whose variables resolve to nothing — `Refs: {{ticket}}` on a branch with no ticket — is dropped rather than committed half-empty. Independent of git's own `git.alwaysSignOff`.
+They get appended after generation, so the text is always exact and the model never has a chance to paraphrase it. A trailer whose variables resolve to nothing, like `Refs: {{ticket}}` on a branch with no ticket, gets dropped rather than committed half-empty. This is independent of git's own `git.alwaysSignOff`.
 
 ### Team conventions
 
-Put a prompt in `.aicommit.md` at the repository root and it travels with the repo, so every contributor with the extension writes messages the same way. **AI Commit: Edit Prompt → Create `.aicommit.md`** seeds it with the current template so you edit rather than start from an empty file.
+Put a prompt in `.aicommit.md` at the repository root and it travels with the repo, so every contributor with the extension writes messages the same way. **AI Commit: Edit Prompt → Create `.aicommit.md`** creates it pre-filled with the current template, so you have something to edit rather than a blank file.
 
 Templates support `{{diff}}`, `{{stat}}`, `{{recentCommits}}`, `{{branch}}`, `{{userHint}}`, `{{language}}`, `{{ticket}}` and `{{styleRules}}`.
 
-> A custom template that omits `{{styleRules}}` takes full control of the format, and the style settings below no longer apply to it. Include that variable to keep them.
+> A custom template that leaves out `{{styleRules}}` takes full control of the format, and the style settings below stop applying to it. Include that variable if you want to keep them.
 
 ### Not using Conventional Commits?
 
-Set `aicommit.conventionalCommits` to `false`. The message then matches the style of your existing commits instead of forcing a `type(scope):` prefix.
+Set `aicommit.conventionalCommits` to `false`. Messages then follow the style of your existing commits instead of forcing a `type(scope):` prefix.
 
 ## Settings
 
@@ -157,12 +177,19 @@ Set `aicommit.conventionalCommits` to `false`. The message then matches the styl
   "aicommit.ticketUppercase": true,
   "aicommit.language": "English",
 
+  // Length
+  "aicommit.limits.bodyBullets": [2, 4],
+  "aicommit.limits.prSummaryBullets": [1, 2],
+  "aicommit.limits.prChangesBullets": [3, 6],
+  "aicommit.limits.bulletChars": 80,
+  "aicommit.limits.subjectChars": 72,
+
   // Prompt and signature
   "aicommit.prompt": "",                      // full template override
   "aicommit.signature": [],                   // git trailers
 
   // PR descriptions
-  "aicommit.baseBranch": "",                  // empty = detect it
+  "aicommit.baseBranch": "",                  // empty means detect it
   "aicommit.prPrompt": "",                    // PR template override
   "aicommit.maxPrDiffBytes": 120000,          // branch diffs are bigger
 
@@ -175,27 +202,27 @@ Set `aicommit.conventionalCommits` to `false`. The message then matches the styl
 
   // Behaviour
   "aicommit.timeoutSeconds": 90,
-  "aicommit.overwriteExistingMessage": false, // false = refine what you typed
+  "aicommit.overwriteExistingMessage": false, // false means refine what you typed
   "aicommit.privacyNotice": "once",           // once | always | never
 
-  // Providers — set these through the commands, not by hand
+  // Providers, set through the commands rather than by hand
   "aicommit.providers": [],
   "aicommit.activeProvider": ""
 }
 ```
 
-There is deliberately no setting that accepts an API key — it would end up committed.
+There is deliberately no setting that takes an API key. It would end up committed.
 
 ## FAQ
 
 **Do I have to set up my key again every time?**
-No. It is stored in your OS keychain and survives restarts. You will re-enter it on a second machine (Settings Sync does not sync secrets), if you use VS Code and VSCodium side by side, or after uninstalling.
+No. It sits in your OS keychain and survives restarts. You will re-enter it on a second machine, since Settings Sync does not sync secrets, and also if you run VS Code and VSCodium side by side, or after uninstalling.
 
-**Nothing is staged — why is the button greyed out?**
-By design. Stage something first.
+**Nothing is staged, so why is the button greyed out?**
+That is deliberate. Stage something first.
 
 **Does it work in an untrusted workspace?**
-Yes, with limits. Hosted and local API providers keep working using your user-level settings. Workspace-level settings and repo-local instruction files are ignored, and CLI providers are refused, because both would let a repository choose what runs on your machine. Trust the folder to enable them.
+Yes, with limits. Hosted and local API providers keep working from your user-level settings. Workspace settings and repo-local instruction files get ignored, and CLI providers are refused, because either would let a repository decide what runs on your machine. Trust the folder to enable them.
 
 ## License
 
