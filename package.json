@@ -3,7 +3,7 @@
   "displayName": "Komit",
   "description": "Generate commit messages and PR descriptions from your changes, using any AI provider.",
   "icon": "assets/icon.png",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publisher": "ariefsn",
   "license": "MIT",
   "engines": {
@@ -11,10 +11,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ariefsn/vsce-aicommit"
+    "url": "https://github.com/ariefsn/vsce-komit"
   },
   "bugs": {
-    "url": "https://github.com/ariefsn/vsce-aicommit/issues",
+    "url": "https://github.com/ariefsn/vsce-komit/issues",
     "email": "ayiexz22@gmail.com"
   },
   "author": {
