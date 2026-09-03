@@ -1,9 +1,9 @@
 {
-  "name": "aicommit",
-  "displayName": "AI Commit",
+  "name": "komit",
+  "displayName": "Komit",
   "description": "Generate commit messages and PR descriptions from your changes, using any AI provider.",
   "icon": "assets/icon.png",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "publisher": "ariefsn",
   "license": "MIT",
   "engines": {
@@ -33,6 +33,7 @@
     "Machine Learning"
   ],
   "keywords": [
+    "komit",
     "commit",
     "commit-message",
     "git",
@@ -62,30 +63,30 @@
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": "limited",
-      "description": "In an untrusted workspace, AI Commit ignores workspace-level provider settings and repository-local instruction files, and will not run CLI-based providers.",
+      "description": "In an untrusted workspace, Komit ignores workspace-level provider settings and repository-local instruction files, and will not run CLI-based providers.",
       "restrictedConfigurations": [
-        "aicommit.providers",
-        "aicommit.activeProvider",
-        "aicommit.prompt",
-        "aicommit.excludeGlobs",
-        "aicommit.excludeGlobs.additional",
-        "aicommit.includeGlobs",
-        "aicommit.signature",
-        "aicommit.conventionalCommits",
-        "aicommit.commitTypes",
-        "aicommit.bodyStyle",
-        "aicommit.scopeSource",
-        "aicommit.ticketPattern",
-        "aicommit.ticketUppercase",
-        "aicommit.privacyNotice",
-        "aicommit.baseBranch",
-        "aicommit.prPrompt",
-        "aicommit.maxPrDiffBytes",
-        "aicommit.limits.bodyBullets",
-        "aicommit.limits.prSummaryBullets",
-        "aicommit.limits.prChangesBullets",
-        "aicommit.limits.bulletChars",
-        "aicommit.limits.subjectChars"
+        "komit.providers",
+        "komit.activeProvider",
+        "komit.prompt",
+        "komit.excludeGlobs",
+        "komit.excludeGlobs.additional",
+        "komit.includeGlobs",
+        "komit.signature",
+        "komit.conventionalCommits",
+        "komit.commitTypes",
+        "komit.bodyStyle",
+        "komit.scopeSource",
+        "komit.ticketPattern",
+        "komit.ticketUppercase",
+        "komit.privacyNotice",
+        "komit.baseBranch",
+        "komit.prPrompt",
+        "komit.maxPrDiffBytes",
+        "komit.limits.bodyBullets",
+        "komit.limits.prSummaryBullets",
+        "komit.limits.prChangesBullets",
+        "komit.limits.bulletChars",
+        "komit.limits.subjectChars"
       ]
     },
     "virtualWorkspaces": false
@@ -97,77 +98,77 @@
   "contributes": {
     "commands": [
       {
-        "command": "aicommit.generate",
+        "command": "komit.generate",
         "title": "Generate Commit Message",
-        "category": "AI Commit",
-        "enablement": "aicommit.hasStagedChanges",
+        "category": "Komit",
+        "enablement": "komit.hasStagedChanges",
         "icon": "$(git-commit)"
       },
       {
-        "command": "aicommit.regenerate",
+        "command": "komit.regenerate",
         "title": "Regenerate Commit Message",
-        "category": "AI Commit",
-        "enablement": "aicommit.hasStagedChanges"
+        "category": "Komit",
+        "enablement": "komit.hasStagedChanges"
       },
       {
-        "command": "aicommit.generatePr",
+        "command": "komit.generatePr",
         "title": "Generate PR Description",
-        "category": "AI Commit"
+        "category": "Komit"
       },
       {
-        "command": "aicommit.selectProvider",
+        "command": "komit.selectProvider",
         "title": "Select Provider",
-        "category": "AI Commit"
+        "category": "Komit"
       },
       {
-        "command": "aicommit.selectModel",
+        "command": "komit.selectModel",
         "title": "Select Model",
-        "category": "AI Commit"
+        "category": "Komit"
       },
       {
-        "command": "aicommit.editPrompt",
+        "command": "komit.editPrompt",
         "title": "Edit Prompt",
-        "category": "AI Commit"
+        "category": "Komit"
       },
       {
-        "command": "aicommit.editSignature",
+        "command": "komit.editSignature",
         "title": "Edit Signature",
-        "category": "AI Commit"
+        "category": "Komit"
       },
       {
-        "command": "aicommit.configure",
+        "command": "komit.configure",
         "title": "Configure",
-        "category": "AI Commit"
+        "category": "Komit"
       },
       {
-        "command": "aicommit.openSettings",
+        "command": "komit.openSettings",
         "title": "Open Settings",
-        "category": "AI Commit"
+        "category": "Komit"
       }
     ],
     "menus": {
       "scm/title": [
         {
-          "command": "aicommit.generate",
+          "command": "komit.generate",
           "group": "navigation@-1",
           "when": "scmProvider == git"
         }
       ],
       "git.commit": [
         {
-          "command": "aicommit.generate",
-          "group": "4_aicommit@1",
+          "command": "komit.generate",
+          "group": "4_komit@1",
           "when": "scmProvider == git"
         }
       ]
     },
     "configuration": {
-      "title": "AI Commit",
+      "title": "Komit",
       "properties": {
-        "aicommit.providers": {
+        "komit.providers": {
           "type": "array",
           "default": [],
-          "markdownDescription": "Configured providers. Add these with **AI Commit: Select Provider** rather than by hand. API keys are stored in the OS keychain and never appear here.",
+          "markdownDescription": "Configured providers. Add these with **Komit: Select Provider** rather than by hand. API keys are stored in the OS keychain and never appear here.",
           "items": {
             "type": "object",
             "required": [
@@ -222,17 +223,17 @@
             }
           }
         },
-        "aicommit.activeProvider": {
+        "komit.activeProvider": {
           "type": "string",
           "default": "",
           "description": "Id of the profile currently in use."
         },
-        "aicommit.conventionalCommits": {
+        "komit.conventionalCommits": {
           "type": "boolean",
           "default": true,
           "markdownDescription": "Require a `type(scope): summary` subject. Turn off to match the style of the repository's existing commits instead."
         },
-        "aicommit.commitTypes": {
+        "komit.commitTypes": {
           "type": "array",
           "items": {
             "type": "string"
@@ -252,7 +253,7 @@
           ],
           "markdownDescription": "Allowed commit types. The defaults are the Conventional Commits set. Add your own, `hotfix` for example, if your team uses them, but note that commit linters may reject non-standard types."
         },
-        "aicommit.bodyStyle": {
+        "komit.bodyStyle": {
           "type": "string",
           "enum": [
             "bullets",
@@ -267,7 +268,7 @@
           "default": "bullets",
           "description": "Shape of the message body below the subject line."
         },
-        "aicommit.scopeSource": {
+        "komit.scopeSource": {
           "type": "string",
           "enum": [
             "auto",
@@ -284,17 +285,17 @@
           "default": "auto",
           "markdownDescription": "Where the scope in `type(scope):` comes from."
         },
-        "aicommit.ticketPattern": {
+        "komit.ticketPattern": {
           "type": "string",
           "default": "[A-Za-z]{2,}[A-Za-z0-9]*-\\d+",
           "markdownDescription": "Regular expression matched against the branch name to find a ticket key. The default matches Jira and Linear style keys such as `PAP-51` in `feat/PAP-51-add-login`. It requires two leading letters so branches like `release/v2-1` are not mistaken for tickets."
         },
-        "aicommit.ticketUppercase": {
+        "komit.ticketUppercase": {
           "type": "boolean",
           "default": true,
           "markdownDescription": "Uppercase the extracted key, so `feat/pap-51` still yields `PAP-51` and one ticket never appears two ways in history."
         },
-        "aicommit.privacyNotice": {
+        "komit.privacyNotice": {
           "type": "string",
           "enum": [
             "once",
@@ -309,7 +310,7 @@
           "default": "once",
           "description": "How often to confirm before your staged diff is sent to a provider."
         },
-        "aicommit.limits.bodyBullets": {
+        "komit.limits.bodyBullets": {
           "type": "array",
           "items": {
             "type": "number",
@@ -323,7 +324,7 @@
           ],
           "markdownDescription": "How many bullets in a commit body. `[2, 4]` asks for two to four. Use `[1]` for exactly one."
         },
-        "aicommit.limits.prSummaryBullets": {
+        "komit.limits.prSummaryBullets": {
           "type": "array",
           "items": {
             "type": "number",
@@ -337,7 +338,7 @@
           ],
           "markdownDescription": "How many bullets in the PR Summary section."
         },
-        "aicommit.limits.prChangesBullets": {
+        "komit.limits.prChangesBullets": {
           "type": "array",
           "items": {
             "type": "number",
@@ -351,59 +352,59 @@
           ],
           "markdownDescription": "How many bullets in the PR Changes section. Keeping this small is what stops long branches producing one bullet per file."
         },
-        "aicommit.limits.bulletChars": {
+        "komit.limits.bulletChars": {
           "type": "number",
           "minimum": 20,
           "default": 80,
           "description": "Rough character limit for a single bullet."
         },
-        "aicommit.limits.subjectChars": {
+        "komit.limits.subjectChars": {
           "type": "number",
           "minimum": 20,
           "default": 72,
           "description": "Character limit for the commit subject line. 72 is the git convention."
         },
-        "aicommit.signature": {
+        "komit.signature": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "default": [],
-          "markdownDescription": "Git trailers appended to every message, such as `Co-authored-by: Name <you@example.com>`. They are added after generation so the text is exact, and template variables like `{{branch}}` work. Edit them with **AI Commit: Edit Signature**."
+          "markdownDescription": "Git trailers appended to every message, such as `Co-authored-by: Name <you@example.com>`. They are added after generation so the text is exact, and template variables like `{{branch}}` work. Edit them with **Komit: Edit Signature**."
         },
-        "aicommit.prompt": {
+        "komit.prompt": {
           "type": "string",
           "default": "",
           "editPresentation": "multilineText",
-          "markdownDescription": "Override the built-in prompt. Supports `{{diff}}`, `{{stat}}`, `{{recentCommits}}`, `{{branch}}`, `{{userHint}}`, `{{language}}`, `{{ticket}}` and `{{styleRules}}`. A repository's `.aicommit.md` takes precedence over this. A template that leaves out `{{styleRules}}` also overrides the style settings above."
+          "markdownDescription": "Override the built-in prompt. Supports `{{diff}}`, `{{stat}}`, `{{recentCommits}}`, `{{branch}}`, `{{userHint}}`, `{{language}}`, `{{ticket}}` and `{{styleRules}}`. A repository's `.komit.md` takes precedence over this. A template that leaves out `{{styleRules}}` also overrides the style settings above."
         },
-        "aicommit.language": {
+        "komit.language": {
           "type": "string",
           "default": "English",
           "description": "Language the commit message is written in."
         },
-        "aicommit.baseBranch": {
+        "komit.baseBranch": {
           "type": "string",
           "default": "",
           "markdownDescription": "Branch that pull requests target. Leave it empty to detect it from `origin/HEAD`, then `main`, `master` or `develop`."
         },
-        "aicommit.prPrompt": {
+        "komit.prPrompt": {
           "type": "string",
           "default": "",
           "editPresentation": "multilineText",
-          "markdownDescription": "Override the PR description template. Supports the same variables plus `{{commits}}` and `{{base}}`. A repository's `.aicommit-pr.md`, or its `.github/pull_request_template.md`, takes precedence over this."
+          "markdownDescription": "Override the PR description template. Supports the same variables plus `{{commits}}` and `{{base}}`. A repository's `.komit-pr.md`, or its `.github/pull_request_template.md`, takes precedence over this."
         },
-        "aicommit.maxPrDiffBytes": {
+        "komit.maxPrDiffBytes": {
           "type": "number",
           "default": 120000,
           "description": "Diff budget for PR descriptions. It is larger than the commit budget because a branch diff spans many commits."
         },
-        "aicommit.excludeGlobs": {
+        "komit.excludeGlobs": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "markdownDescription": "Paths excluded from the diff before it is sent. This replaces the built-in list. To extend it instead, use `#aicommit.excludeGlobs.additional#`.",
+          "markdownDescription": "Paths excluded from the diff before it is sent. This replaces the built-in list. To extend it instead, use `#komit.excludeGlobs.additional#`.",
           "default": [
             "**/.env",
             "**/.env.*",
@@ -479,7 +480,7 @@
             "**/*.golden"
           ]
         },
-        "aicommit.excludeGlobs.additional": {
+        "komit.excludeGlobs.additional": {
           "type": "array",
           "items": {
             "type": "string"
@@ -487,7 +488,7 @@
           "default": [],
           "markdownDescription": "Extra exclusions appended to the built-in list, so one project-specific pattern does not require copying the whole default array."
         },
-        "aicommit.includeGlobs": {
+        "komit.includeGlobs": {
           "type": "array",
           "items": {
             "type": "string"
@@ -498,24 +499,24 @@
             "**/.env.template",
             "**/.env.dist"
           ],
-          "markdownDescription": "Paths sent even though `#aicommit.excludeGlobs#` matches them. Git pathspec cannot re-include an excluded path, so these come from a second diff pass. That is how `.env` stays out while `.env.example` still reaches the model."
+          "markdownDescription": "Paths sent even though `#komit.excludeGlobs#` matches them. Git pathspec cannot re-include an excluded path, so these come from a second diff pass. That is how `.env` stays out while `.env.example` still reaches the model."
         },
-        "aicommit.recentCommitCount": {
+        "komit.recentCommitCount": {
           "type": "number",
           "default": 10,
           "description": "How many recent commit subjects to send, so the message matches the repository's existing style."
         },
-        "aicommit.maxDiffBytes": {
+        "komit.maxDiffBytes": {
           "type": "number",
           "default": 60000,
           "description": "Byte budget for the diff. The file summary is always sent in full."
         },
-        "aicommit.timeoutSeconds": {
+        "komit.timeoutSeconds": {
           "type": "number",
           "default": 90,
           "description": "How long to wait for the provider before giving up."
         },
-        "aicommit.overwriteExistingMessage": {
+        "komit.overwriteExistingMessage": {
           "type": "boolean",
           "default": false,
           "description": "Discard text already in the commit box instead of treating it as intent to refine."
@@ -537,8 +538,8 @@
     "lint": "eslint src",
     "test": "vscode-test",
     "vsix": "yarn run package && vsce package --no-dependencies",
-    "publish:vsce": "vsce publish --packagePath aicommit-$npm_package_version.vsix",
-    "publish:ovsx": "ovsx publish aicommit-$npm_package_version.vsix"
+    "publish:vsce": "vsce publish --packagePath komit-$npm_package_version.vsix",
+    "publish:ovsx": "ovsx publish komit-$npm_package_version.vsix"
   },
   "devDependencies": {
     "@types/vscode": "^1.86.0",

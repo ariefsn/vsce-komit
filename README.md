@@ -1,4 +1,4 @@
-# AI Commit
+# Komit
 
 Commit messages and PR descriptions written from your actual changes, using whatever AI provider you already have.
 
@@ -20,55 +20,58 @@ feat(PAP-51): add commit message generation
 ## Getting started
 
 1. Stage some changes.
-2. Click the AI Commit icon in the Source Control toolbar, just above the commit box.
-3. Pick a provider. Any AI CLI already on your `PATH` (`claude`, `codex`, `gemini`, `opencode`) shows up first and needs no API key, because it uses the CLI's own login.
+2. Click the Komit icon in the Source Control toolbar, just above the commit box. It is the git-commit icon, a circle on a line, and its tooltip reads **Komit: Generate Commit Message**.
+
+   ![The Komit button in the Source Control toolbar](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/commit-button.png)
+
+3. Pick a provider. Any AI CLI already on your `PATH` (`claude`, `codex`, `gemini`, `opencode`) shows up first and needs no API key, because it uses the CLI's own login. The ones you do not have sit lower in the list, under **CLI agents (not detected on PATH)**.
 
    ![Choosing a provider on first run](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-provider-engine.png)
 
 4. The message lands in the commit box. Edit it if you want, then commit.
 
-If the message misses the point, run **AI Commit: Regenerate Commit Message**. It asks again for a different take on the same changes.
+If the message misses the point, run **Komit: Regenerate Commit Message**. It asks again for a different take on the same changes.
 
 Nothing below this line is required.
 
 ## Commands
 
-- AI Commit: Generate Commit Message
+- Komit: Generate Commit Message
   > Write a message from the staged changes. This is what the toolbar button runs.
-- AI Commit: Regenerate Commit Message
+- Komit: Regenerate Commit Message
   > Ask again for a different take.
-- AI Commit: Generate PR Description
+- Komit: Generate PR Description
   > Write a PR title and description for the whole branch.
-- AI Commit: Configure
+- Komit: Configure
   > Every setting in one list, each showing its current value.
-- AI Commit: Select Provider
+- Komit: Select Provider
   > Switch providers, or add one.
-- AI Commit: Select Model
+- Komit: Select Model
   > Pick a model for the active provider.
-- AI Commit: Edit Prompt
+- Komit: Edit Prompt
   > Customize the instructions, for you or for the repository.
-- AI Commit: Edit Signature
+- Komit: Edit Signature
   > Add trailers such as `Co-authored-by`.
-- AI Commit: Open Settings
+- Komit: Open Settings
   > Jump to the settings page.
 
-![The AI Commit commands in the Command Palette](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/pr-generation.png)
+![The Komit commands in the Command Palette](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/pr-generation.png)
 
 ## Providers
 
 | Class | How it talks | Auth | Works with |
 | --- | --- | --- | --- |
 | `cli` | Spawns the binary, context over stdin | The CLI's own login, so no API key | `claude`, `codex`, `gemini`, `opencode` |
-| `openai` | `POST {baseUrl}/chat/completions` | Bearer token | OpenAI, OpenRouter, Groq, DeepSeek, GLM (Zhipu), SumoPod, Together, Ollama, LM Studio, vLLM |
+| `openai` | `POST {baseUrl}/chat/completions` | Bearer token | OpenAI, OpenRouter, Groq, DeepSeek, GLM (Zhipu), SumoPod, Ollama, LM Studio |
 | `anthropic` | `POST {baseUrl}/v1/messages` | `x-api-key` | Anthropic API |
 
-The `openai` class takes any base URL, so any OpenAI-compatible endpoint works even if it is not in the list. Add one through **AI Commit: Select Provider → Add custom provider…**
+Those are the profiles that ship ready to use. The `openai` class takes any base URL, though, so anything OpenAI-compatible works too, Together and vLLM included. Add one through **Komit: Select Provider → Add custom provider…**
 
 Keep as many as you like and switch in one command. A cheap fast model for routine commits, something stronger when it matters.
 
 ![Switching the active provider](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-provider.png)
 
-Defaults aim at the cheapest model that still writes something good. Change it with **AI Commit: Select Model**, which lists whatever the provider offers:
+Defaults aim at the cheapest model that still writes something good. Change it with **Komit: Select Model**, which lists whatever the provider offers:
 
 ![Picking a model](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-model.png)
 
@@ -76,7 +79,7 @@ If an endpoint has no model catalogue, the picker quietly falls back to typing t
 
 ## PR descriptions
 
-**AI Commit: Generate PR Description** writes the title and body for a whole branch, opens it in a Markdown editor and copies it to the clipboard, so it works with the GitHub web UI, the `gh` CLI, or anything else.
+**Komit: Generate PR Description** writes the title and body for a whole branch, opens it in a Markdown editor and copies it to the clipboard, so it works with the GitHub web UI, the `gh` CLI, or anything else.
 
 ```markdown
 feat(PAP-51): rework auth with token refresh
@@ -97,7 +100,7 @@ It reads your commits for the story, the file summary for scope, and the diff fo
 
 The diff comes from the merge base (`base...HEAD`), so anything that landed on the base branch after you branched off stays out of your description.
 
-Base branch detection tries `origin/HEAD`, then `main`, `master` and `develop`. Pin it with `aicommit.baseBranch` if that guesses wrong. Whichever branch it picks gets named in the progress message, so a bad guess is visible rather than silent:
+Base branch detection tries `origin/HEAD`, then `main`, `master` and `develop`. Pin it with `komit.baseBranch` if that guesses wrong. Whichever branch it picks gets named in the progress message, so a bad guess is visible rather than silent:
 
 ![Progress notification naming the base branch](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/pr-generation-start.png)
 
@@ -107,8 +110,8 @@ If your repository has a `.github/pull_request_template.md`, that structure gets
 
 Three routes, all equivalent:
 
-- **AI Commit: Configure** puts every setting in one list, with a scope switch at the top for user against workspace.
-- **Settings UI**, searching for "AI Commit".
+- **Komit: Configure** puts every setting in one list, with a scope switch at the top for user against workspace.
+- **Settings UI**, searching for "Komit".
 - **`settings.json`** directly.
 
 Workspace settings give you per-repository values, so a work signature in one repo and a personal one in another needs nothing special.
@@ -123,7 +126,7 @@ If your branch names carry a ticket key, it becomes the scope on its own:
 | `feat/pap-51-add-login` | `feat(PAP-51): …`, uppercased |
 | `main` | `fix(providers): …`, falling back to the code area |
 
-The key gets pulled out of the branch name in code, so the model never has to guess at it. Adjust `aicommit.ticketPattern` for other trackers, or set `aicommit.scopeSource` to `ticket`, `path` or `none`.
+The key gets pulled out of the branch name in code, so the model never has to guess at it. Adjust `komit.ticketPattern` for other trackers, or set `komit.scopeSource` to `ticket`, `path` or `none`.
 
 ### Message length
 
@@ -131,20 +134,20 @@ Bullet counts and line lengths are settings, so you can tune the shape without r
 
 ```jsonc
 // one-line commits with no body
-"aicommit.limits.bodyBullets": [1],
+"komit.limits.bodyBullets": [1],
 
 // roomier PR descriptions
-"aicommit.limits.prChangesBullets": [4, 8]
+"komit.limits.prChangesBullets": [4, 8]
 ```
 
 A range like `[2, 4]` asks for two to four. A single number like `[3]` asks for exactly three.
 
 ### Signatures
 
-Add trailers with **AI Commit: Edit Signature**, which includes an option that reads your name and email straight from git config:
+Add trailers with **Komit: Edit Signature**, which includes an option that reads your name and email straight from git config:
 
 ```jsonc
-"aicommit.signature": [
+"komit.signature": [
   "Co-authored-by: Your Name <you@example.com>",
   "Refs: {{ticket}}"
 ]
@@ -154,7 +157,7 @@ They get appended after generation, so the text is always exact and the model ne
 
 ### Team conventions
 
-Put a prompt in `.aicommit.md` at the repository root and it travels with the repo, so every contributor with the extension writes messages the same way. **AI Commit: Edit Prompt → Create `.aicommit.md`** creates it pre-filled with the current template, so you have something to edit rather than a blank file.
+Put a prompt in `.komit.md` at the repository root and it travels with the repo, so every contributor with the extension writes messages the same way. **Komit: Edit Prompt → Create `.komit.md`** creates it pre-filled with the current template, so you have something to edit rather than a blank file.
 
 Templates support `{{diff}}`, `{{stat}}`, `{{recentCommits}}`, `{{branch}}`, `{{userHint}}`, `{{language}}`, `{{ticket}}` and `{{styleRules}}`.
 
@@ -162,52 +165,52 @@ Templates support `{{diff}}`, `{{stat}}`, `{{recentCommits}}`, `{{branch}}`, `{{
 
 ### Not using Conventional Commits?
 
-Set `aicommit.conventionalCommits` to `false`. Messages then follow the style of your existing commits instead of forcing a `type(scope):` prefix.
+Set `komit.conventionalCommits` to `false`. Messages then follow the style of your existing commits instead of forcing a `type(scope):` prefix.
 
 ## Settings
 
 ```jsonc
 {
   // Message shape
-  "aicommit.conventionalCommits": true,       // require a type(scope): prefix
-  "aicommit.commitTypes": [/* feat, fix, … */], // add your own, e.g. hotfix
-  "aicommit.bodyStyle": "bullets",            // bullets | prose | none
-  "aicommit.scopeSource": "auto",             // auto | ticket | path | none
-  "aicommit.ticketPattern": "[A-Za-z]{2,}[A-Za-z0-9]*-\\d+",
-  "aicommit.ticketUppercase": true,
-  "aicommit.language": "English",
+  "komit.conventionalCommits": true,       // require a type(scope): prefix
+  "komit.commitTypes": [/* feat, fix, … */], // add your own, e.g. hotfix
+  "komit.bodyStyle": "bullets",            // bullets | prose | none
+  "komit.scopeSource": "auto",             // auto | ticket | path | none
+  "komit.ticketPattern": "[A-Za-z]{2,}[A-Za-z0-9]*-\\d+",
+  "komit.ticketUppercase": true,
+  "komit.language": "English",
 
   // Length
-  "aicommit.limits.bodyBullets": [2, 4],
-  "aicommit.limits.prSummaryBullets": [1, 2],
-  "aicommit.limits.prChangesBullets": [3, 6],
-  "aicommit.limits.bulletChars": 80,
-  "aicommit.limits.subjectChars": 72,
+  "komit.limits.bodyBullets": [2, 4],
+  "komit.limits.prSummaryBullets": [1, 2],
+  "komit.limits.prChangesBullets": [3, 6],
+  "komit.limits.bulletChars": 80,
+  "komit.limits.subjectChars": 72,
 
   // Prompt and signature
-  "aicommit.prompt": "",                      // full template override
-  "aicommit.signature": [],                   // git trailers
+  "komit.prompt": "",                      // full template override
+  "komit.signature": [],                   // git trailers
 
   // PR descriptions
-  "aicommit.baseBranch": "",                  // empty means detect it
-  "aicommit.prPrompt": "",                    // PR template override
-  "aicommit.maxPrDiffBytes": 120000,          // branch diffs are bigger
+  "komit.baseBranch": "",                  // empty means detect it
+  "komit.prPrompt": "",                    // PR template override
+  "komit.maxPrDiffBytes": 120000,          // branch diffs are bigger
 
   // What gets sent
-  "aicommit.excludeGlobs": [/* secrets, lockfiles, generated, build output */],
-  "aicommit.excludeGlobs.additional": [],     // append instead of replacing
-  "aicommit.includeGlobs": [/* .env.example, … */],
-  "aicommit.recentCommitCount": 10,
-  "aicommit.maxDiffBytes": 60000,
+  "komit.excludeGlobs": [/* secrets, lockfiles, generated, build output */],
+  "komit.excludeGlobs.additional": [],     // append instead of replacing
+  "komit.includeGlobs": [/* .env.example, … */],
+  "komit.recentCommitCount": 10,
+  "komit.maxDiffBytes": 60000,
 
   // Behaviour
-  "aicommit.timeoutSeconds": 90,
-  "aicommit.overwriteExistingMessage": false, // false means refine what you typed
-  "aicommit.privacyNotice": "once",           // once | always | never
+  "komit.timeoutSeconds": 90,
+  "komit.overwriteExistingMessage": false, // false means refine what you typed
+  "komit.privacyNotice": "once",           // once | always | never
 
   // Providers, set through the commands rather than by hand
-  "aicommit.providers": [],
-  "aicommit.activeProvider": ""
+  "komit.providers": [],
+  "komit.activeProvider": ""
 }
 ```
 
