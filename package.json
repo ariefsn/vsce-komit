@@ -1,9 +1,9 @@
 {
   "name": "aicommit",
   "displayName": "AI Commit",
-  "description": "Generate commit messages from staged changes using any AI provider.",
+  "description": "Generate commit messages and PR descriptions from your changes, using any AI provider.",
   "icon": "assets/icon.png",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "publisher": "ariefsn",
   "license": "MIT",
   "engines": {
@@ -52,7 +52,9 @@
     "zhipu",
     "sumopod",
     "vscodium",
-    "source-control"
+    "source-control",
+    "pull-request",
+    "pr-description"
   ],
   "extensionKind": [
     "workspace"
@@ -75,7 +77,10 @@
         "aicommit.scopeSource",
         "aicommit.ticketPattern",
         "aicommit.ticketUppercase",
-        "aicommit.privacyNotice"
+        "aicommit.privacyNotice",
+        "aicommit.baseBranch",
+        "aicommit.prPrompt",
+        "aicommit.maxPrDiffBytes"
       ]
     },
     "virtualWorkspaces": false
@@ -95,6 +100,17 @@
           "light": "assets/toolbar-light.svg",
           "dark": "assets/toolbar-dark.svg"
         }
+      },
+      {
+        "command": "aicommit.regenerate",
+        "title": "Regenerate Commit Message",
+        "category": "AI Commit",
+        "enablement": "aicommit.hasStagedChanges"
+      },
+      {
+        "command": "aicommit.generatePr",
+        "title": "Generate PR Description",
+        "category": "AI Commit"
       },
       {
         "command": "aicommit.selectProvider",
@@ -309,6 +325,22 @@
           "type": "string",
           "default": "English",
           "description": "Language the commit message is written in."
+        },
+        "aicommit.baseBranch": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Branch that pull requests target. Leave empty to detect it from `origin/HEAD`, then `main`, `master` or `develop`."
+        },
+        "aicommit.prPrompt": {
+          "type": "string",
+          "default": "",
+          "editPresentation": "multilineText",
+          "markdownDescription": "Override the PR description template. Supports the same variables plus `{{commits}}` and `{{base}}`. A repository's `.aicommit-pr.md`, or its `.github/pull_request_template.md`, takes precedence over this."
+        },
+        "aicommit.maxPrDiffBytes": {
+          "type": "number",
+          "default": 120000,
+          "description": "Diff budget for PR descriptions. Larger than the commit budget, since a branch diff spans many commits."
         },
         "aicommit.excludeGlobs": {
           "type": "array",

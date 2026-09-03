@@ -8,6 +8,7 @@ import { buildStyleRules } from './prompt/default';
 import { resolvePrompt } from './prompt/resolve';
 import { render, type TemplateVars } from './prompt/render';
 import { appendSignature } from './signature';
+import { generatePr } from './pr';
 import { configure } from './ui/configure';
 import { editPrompt, editSignature } from './ui/prompt-editor';
 import { createProvider, getActiveProfile } from './providers/registry';
@@ -32,6 +33,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand('aicommit.generate', (arg?: { rootUri?: vscode.Uri }) =>
 			generate(context, arg?.rootUri).catch(showError)),
+		vscode.commands.registerCommand('aicommit.regenerate', (arg?: { rootUri?: vscode.Uri }) =>
+			generate(context, arg?.rootUri, true).catch(showError)),
+		vscode.commands.registerCommand('aicommit.generatePr', (arg?: { rootUri?: vscode.Uri }) =>
+			generatePr(context, arg?.rootUri).catch(showError)),
 		vscode.commands.registerCommand('aicommit.selectProvider', () => selectProvider(context).catch(showError)),
 		vscode.commands.registerCommand('aicommit.selectModel', () => selectModel(context).catch(showError)),
 		vscode.commands.registerCommand('aicommit.openSettings', () =>
@@ -53,7 +58,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 export function deactivate() { }
 
-async function generate(context: vscode.ExtensionContext, rootUri: vscode.Uri | undefined): Promise<void> {
+async function generate(
+	context: vscode.ExtensionContext,
+	rootUri: vscode.Uri | undefined,
+	regenerate = false,
+): Promise<void> {
 	const api = await getGitAPI();
 	if (!api) {
 		throw new AiCommitError('The built-in Git extension is not available.');
@@ -92,7 +101,7 @@ async function generate(context: vscode.ExtensionContext, rootUri: vscode.Uri | 
 			location: vscode.ProgressLocation.SourceControl,
 			title: 'Generating commit message…',
 			cancellable: true,
-		}, (_progress, token) => run(repo, provider, token));
+		}, (_progress, token) => run(repo, provider, token, regenerate));
 
 		if (message) {
 			repo.inputBox.value = message;
@@ -102,7 +111,12 @@ async function generate(context: vscode.ExtensionContext, rootUri: vscode.Uri | 
 	}
 }
 
-async function run(repo: GitRepository, provider: Provider, token: vscode.CancellationToken): Promise<string | undefined> {
+async function run(
+	repo: GitRepository,
+	provider: Provider,
+	token: vscode.CancellationToken,
+	regenerate = false,
+): Promise<string | undefined> {
 	const api = await getGitAPI();
 	const config = vscode.workspace.getConfiguration('aicommit');
 
@@ -123,7 +137,9 @@ async function run(repo: GitRepository, provider: Provider, token: vscode.Cancel
 	}
 
 	const existing = repo.inputBox.value.trim();
-	const overwrite = config.get<boolean>('overwriteExistingMessage') ?? false;
+	// Regenerating always replaces, and treats what is there as the rejected
+	// attempt rather than as intent to refine.
+	const overwrite = regenerate || (config.get<boolean>('overwriteExistingMessage') ?? false);
 
 	const vars: TemplateVars = {
 		diff: staged.truncated
@@ -138,7 +154,10 @@ async function run(repo: GitRepository, provider: Provider, token: vscode.Cancel
 		ticket: ticketFor(staged.branch) ?? '',
 	};
 
-	const instruction = render(await resolvePrompt(repo.rootUri), vars);
+	let instruction = render(await resolvePrompt(repo.rootUri), vars);
+	if (regenerate && existing) {
+		instruction += `\n\nYou previously suggested the message below and it was rejected. Write a genuinely different one — a different angle or emphasis, not a rephrasing.\n\n${existing}\n`;
+	}
 
 	if (token.isCancellationRequested) {
 		return undefined;

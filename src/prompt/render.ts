@@ -7,6 +7,10 @@ export interface TemplateVars {
 	language: string;
 	styleRules: string;
 	ticket: string;
+	/** PR generation only; empty for commit messages. */
+	commits?: string;
+	base?: string;
+	previousAttempt?: string;
 }
 
 const VARIABLE = /\{\{\s*(\w+)\s*\}\}/g;

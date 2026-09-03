@@ -22,7 +22,10 @@ const SETTINGS: Setting[] = [
 	{ key: 'ticketUppercase', label: 'Uppercase ticket keys', group: 'Message style', type: 'boolean' },
 	{ key: 'language', label: 'Language', group: 'Message style', type: 'string' },
 
+	{ key: 'baseBranch', label: 'PR base branch', group: 'Message style', type: 'string', summary: v => String(v || 'auto-detect') },
+
 	{ key: 'prompt', label: 'Edit prompt…', group: 'Prompt & signature', type: 'command', command: 'aicommit.editPrompt', summary: v => v ? 'custom' : 'built-in' },
+	{ key: 'prPrompt', label: 'PR template', group: 'Prompt & signature', type: 'string', summary: v => v ? 'custom' : 'built-in' },
 	{ key: 'signature', label: 'Edit signature…', group: 'Prompt & signature', type: 'command', command: 'aicommit.editSignature', summary: countOf('trailer') },
 
 	{ key: 'activeProvider', label: 'Provider…', group: 'Provider', type: 'command', command: 'aicommit.selectProvider', summary: v => String(v || '—') },
@@ -33,6 +36,7 @@ const SETTINGS: Setting[] = [
 	{ key: 'includeGlobs', label: 'Re-included paths', group: 'Diff', type: 'array', summary: countOf('pattern') },
 	{ key: 'recentCommitCount', label: 'Recent commits sent', group: 'Diff', type: 'number' },
 	{ key: 'maxDiffBytes', label: 'Max diff size', group: 'Diff', type: 'number', summary: v => `${v} bytes` },
+	{ key: 'maxPrDiffBytes', label: 'Max PR diff size', group: 'Diff', type: 'number', summary: v => `${v} bytes` },
 	{ key: 'timeoutSeconds', label: 'Timeout', group: 'Diff', type: 'number', summary: v => `${v}s` },
 
 	{ key: 'overwriteExistingMessage', label: 'Overwrite existing message', group: 'Behaviour', type: 'boolean' },

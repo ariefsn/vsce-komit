@@ -1,6 +1,6 @@
 # AI Commit
 
-One button in the Source Control view that writes your commit message from staged changes — using whatever AI backend you already have.
+Commit messages and PR descriptions written from your actual changes — using whatever AI backend you already have.
 
 ```
 feat(PAP-51): add commit message generation
@@ -27,12 +27,18 @@ feat(PAP-51): add commit message generation
 
 4. The message appears in the commit box. Edit it if you like, then commit.
 
+Not happy with what you got? **AI Commit: Regenerate Commit Message** asks again for a different angle, rather than rewording the same one.
+
 There is no configuration step. Everything below is optional.
 
 ## Commands
 
 - AI Commit: Generate Commit Message
   > Write a message from the staged changes. Also the toolbar button.
+- AI Commit: Regenerate Commit Message
+  > Not happy with it? Get a genuinely different take, not a rephrasing.
+- AI Commit: Generate PR Description
+  > Write a PR title and description for the whole branch.
 - AI Commit: Configure
   > Every setting in one list, each showing its current value.
 - AI Commit: Select Provider
@@ -65,6 +71,31 @@ Defaults aim at the cheapest model that still writes a good message. Change it w
 ![Picking a model](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/select-model.png)
 
 Where an endpoint has no model catalogue, the picker falls back to plain text entry rather than erroring.
+
+## PR descriptions
+
+**AI Commit: Generate PR Description** writes the title and body for a whole branch, opens it in a Markdown editor, and copies it to the clipboard — so it works with the GitHub web UI, the CLI, or any other workflow.
+
+```markdown
+feat(PAP-51): rework auth with token refresh
+
+## Summary
+- Replaces session cookies with short-lived tokens so expiry no longer
+  bounces users back to sign-in
+
+## Changes
+- Adds the login form, validation and error states
+- Refreshes expired tokens in the auth interceptor
+- Covers the refresh path and expiry boundary with unit tests
+```
+
+![Generating a PR description](https://raw.githubusercontent.com/ariefsn/vsce-aicommit/main/assets/showcase/generate-pr.png)
+
+It reads your commits for the narrative, the file summary for scope, and the diff for detail. Changes are grouped by concern rather than listed per file, so the description stays the same length whether the branch touched 3 files or 30.
+
+The diff is taken from the merge base (`base...HEAD`), so anything that landed on the base branch after you branched off stays out of your description.
+
+The base branch is detected from `origin/HEAD`, then `main`, `master` or `develop`; set `aicommit.baseBranch` to pin it, and the branch actually used is named in the progress message. If your repository has a `.github/pull_request_template.md`, that structure is filled in instead of the default sections.
 
 ## Configuring
 
@@ -129,6 +160,11 @@ Set `aicommit.conventionalCommits` to `false`. The message then matches the styl
   // Prompt and signature
   "aicommit.prompt": "",                      // full template override
   "aicommit.signature": [],                   // git trailers
+
+  // PR descriptions
+  "aicommit.baseBranch": "",                  // empty = detect it
+  "aicommit.prPrompt": "",                    // PR template override
+  "aicommit.maxPrDiffBytes": 120000,          // branch diffs are bigger
 
   // What gets sent
   "aicommit.excludeGlobs": [/* secrets, lockfiles, generated, build output */],

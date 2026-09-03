@@ -95,6 +95,93 @@ export async function collectContext(
 	};
 }
 
+export interface BranchContext {
+	base: string;
+	commits: string[];
+	stat: string;
+	diff: string;
+	truncated: boolean;
+	branch: string;
+}
+
+/**
+ * Resolves the branch a PR would target. A wrong base silently produces a
+ * description of somebody else's work, so the result is surfaced to the user.
+ */
+export async function resolveBaseBranch(
+	gitPath: string,
+	cwd: string,
+	configured: string,
+): Promise<string | undefined> {
+	if (configured.trim()) {
+		return configured.trim();
+	}
+
+	const remoteHead = (await runGit(gitPath, cwd, ['symbolic-ref', 'refs/remotes/origin/HEAD'])
+		.catch(() => '')).trim();
+	if (remoteHead) {
+		return remoteHead.replace('refs/remotes/', '');
+	}
+
+	for (const candidate of ['main', 'master', 'develop']) {
+		const exists = await runGit(gitPath, cwd, ['rev-parse', '--verify', '--quiet', candidate])
+			.then(() => true)
+			.catch(() => false);
+		if (exists) {
+			return candidate;
+		}
+	}
+
+	return undefined;
+}
+
+export async function listBranches(gitPath: string, cwd: string): Promise<string[]> {
+	const out = await runGit(gitPath, cwd, ['branch', '--format=%(refname:short)']).catch(() => '');
+	return out.split('\n').map(l => l.trim()).filter(Boolean);
+}
+
+export async function collectBranchContext(
+	gitPath: string,
+	repo: GitRepository,
+	base: string,
+	options: { excludeGlobs: string[]; includeGlobs: string[]; maxDiffBytes: number },
+): Promise<BranchContext> {
+	const cwd = repo.rootUri.fsPath;
+	const pathspecs = toPathspecs(options.excludeGlobs);
+
+	const included = options.includeGlobs.filter(g => g.trim()).map(g => `:(glob)${g.trim()}`);
+	const extra = (args: string[]) => included.length
+		? runGit(gitPath, cwd, [...args, '--', ...included]).catch(() => '')
+		: Promise.resolve('');
+
+	// Three dots: diff from the merge-base, so this shows only what the branch
+	// changed. Two dots would fold in whatever landed on the base meanwhile.
+	const range = `${base}...HEAD`;
+
+	const [log, stat, rawDiff, extraStat, extraDiff, branch] = await Promise.all([
+		runGit(gitPath, cwd, ['log', `${base}..HEAD`, '--format=%s%n%b%n--']).catch(() => ''),
+		runGit(gitPath, cwd, ['diff', range, '--stat', '--', ...pathspecs]),
+		runGit(gitPath, cwd, ['diff', range, '--no-color', '--', ...pathspecs]),
+		extra(['diff', range, '--stat']),
+		extra(['diff', range, '--no-color']),
+		runGit(gitPath, cwd, ['rev-parse', '--abbrev-ref', 'HEAD']).catch(() => ''),
+	]);
+
+	const merged = join(rawDiff, extraDiff);
+	const truncated = Buffer.byteLength(merged, 'utf8') > options.maxDiffBytes;
+
+	return {
+		base,
+		commits: log.split('\n--\n').map(c => c.trim()).filter(Boolean),
+		stat: join(stat, extraStat).trim(),
+		diff: truncated
+			? Buffer.from(merged, 'utf8').subarray(0, options.maxDiffBytes).toString('utf8')
+			: merged.trim(),
+		truncated,
+		branch: branch.trim(),
+	};
+}
+
 function join(primary: string, extra: string): string {
 	const a = primary.trimEnd();
 	const b = extra.trim();
