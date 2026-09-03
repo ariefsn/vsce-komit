@@ -31,12 +31,12 @@ const SETTINGS: Setting[] = [
 
 	{ key: 'baseBranch', label: 'PR base branch', group: 'Message style', type: 'string', summary: v => String(v || 'auto-detect') },
 
-	{ key: 'prompt', label: 'Edit prompt…', group: 'Prompt & signature', type: 'command', command: 'aicommit.editPrompt', summary: v => v ? 'custom' : 'built-in' },
+	{ key: 'prompt', label: 'Edit prompt…', group: 'Prompt & signature', type: 'command', command: 'komit.editPrompt', summary: v => v ? 'custom' : 'built-in' },
 	{ key: 'prPrompt', label: 'PR template', group: 'Prompt & signature', type: 'string', summary: v => v ? 'custom' : 'built-in' },
-	{ key: 'signature', label: 'Edit signature…', group: 'Prompt & signature', type: 'command', command: 'aicommit.editSignature', summary: countOf('trailer') },
+	{ key: 'signature', label: 'Edit signature…', group: 'Prompt & signature', type: 'command', command: 'komit.editSignature', summary: countOf('trailer') },
 
-	{ key: 'activeProvider', label: 'Provider…', group: 'Provider', type: 'command', command: 'aicommit.selectProvider', summary: v => String(v || 'not set') },
-	{ key: '', label: 'Model…', group: 'Provider', type: 'command', command: 'aicommit.selectModel' },
+	{ key: 'activeProvider', label: 'Provider…', group: 'Provider', type: 'command', command: 'komit.selectProvider', summary: v => String(v || 'not set') },
+	{ key: '', label: 'Model…', group: 'Provider', type: 'command', command: 'komit.selectModel' },
 
 	{ key: 'excludeGlobs', label: 'Excluded paths', group: 'Diff', type: 'array', summary: countOf('pattern') },
 	{ key: 'excludeGlobs.additional', label: 'Extra exclusions', group: 'Diff', type: 'array', summary: countOf('pattern') },
@@ -69,7 +69,7 @@ interface Item extends vscode.QuickPickItem {
 
 /** Every setting in one place, each showing its current value. */
 export async function configure(target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Global): Promise<void> {
-	const config = vscode.workspace.getConfiguration('aicommit');
+	const config = vscode.workspace.getConfiguration('komit');
 	const workspaceOpen = (vscode.workspace.workspaceFolders?.length ?? 0) > 0;
 	const isWorkspace = target === vscode.ConfigurationTarget.Workspace;
 
@@ -102,7 +102,7 @@ export async function configure(target: vscode.ConfigurationTarget = vscode.Conf
 	items.push({ label: '$(json) Open settings.json…', openJson: true });
 
 	const picked = await vscode.window.showQuickPick(items, {
-		title: 'AI Commit: configure',
+		title: 'Komit: configure',
 		placeHolder: `Editing ${isWorkspace ? 'workspace' : 'user'} settings`,
 		matchOnDescription: true,
 	});
@@ -116,7 +116,7 @@ export async function configure(target: vscode.ConfigurationTarget = vscode.Conf
 	}
 
 	if (picked.openJson) {
-		await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:ariefsn.aicommit');
+		await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:ariefsn.komit');
 		return;
 	}
 
@@ -135,7 +135,7 @@ function describe(value: unknown): string {
 }
 
 async function edit(setting: Setting, target: vscode.ConfigurationTarget): Promise<void> {
-	const config = vscode.workspace.getConfiguration('aicommit');
+	const config = vscode.workspace.getConfiguration('komit');
 
 	switch (setting.type) {
 		case 'command':
@@ -206,7 +206,7 @@ async function edit(setting: Setting, target: vscode.ConfigurationTarget): Promi
 }
 
 async function editArray(setting: Setting, target: vscode.ConfigurationTarget): Promise<void> {
-	const config = vscode.workspace.getConfiguration('aicommit');
+	const config = vscode.workspace.getConfiguration('komit');
 	const current = config.get<string[]>(setting.key) ?? [];
 
 	const action = await vscode.window.showQuickPick([

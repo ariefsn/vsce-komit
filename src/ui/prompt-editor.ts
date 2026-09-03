@@ -36,13 +36,13 @@ export async function editPrompt(repoRoot: vscode.Uri | undefined): Promise<void
 	});
 
 	const picked = await vscode.window.showQuickPick(choices, {
-		title: 'AI Commit: edit prompt',
+		title: 'Komit: edit prompt',
 		placeHolder: 'How would you like to customize the prompt?',
 	});
 
 	switch (picked?.action) {
 		case 'settings':
-			await vscode.commands.executeCommand('workbench.action.openSettings', 'aicommit.prompt');
+			await vscode.commands.executeCommand('workbench.action.openSettings', 'komit.prompt');
 			break;
 		case 'repo':
 			await openRepoFile(repoFile!, repoFileExists);
@@ -65,7 +65,7 @@ async function openRepoFile(uri: vscode.Uri, exists: boolean): Promise<void> {
 }
 
 async function resetPrompt(repoFile: vscode.Uri | undefined, repoFileExists: boolean): Promise<void> {
-	await vscode.workspace.getConfiguration('aicommit')
+	await vscode.workspace.getConfiguration('komit')
 		.update('prompt', undefined, vscode.ConfigurationTarget.Global);
 
 	if (repoFile && repoFileExists) {
@@ -79,7 +79,7 @@ async function resetPrompt(repoFile: vscode.Uri | undefined, repoFileExists: boo
 		}
 	}
 
-	vscode.window.showInformationMessage('AI Commit: using the built-in prompt.');
+	vscode.window.showInformationMessage('Komit: using the built-in prompt.');
 }
 
 interface SignatureChoice extends vscode.QuickPickItem {
@@ -88,7 +88,7 @@ interface SignatureChoice extends vscode.QuickPickItem {
 
 /** Edits trailers without anyone having to hand-write JSON. */
 export async function editSignature(gitPath: string | undefined, repoRoot: vscode.Uri | undefined): Promise<void> {
-	const config = vscode.workspace.getConfiguration('aicommit');
+	const config = vscode.workspace.getConfiguration('komit');
 	const current = config.get<string[]>('signature') ?? [];
 
 	const choices: SignatureChoice[] = [
@@ -102,7 +102,7 @@ export async function editSignature(gitPath: string | undefined, repoRoot: vscod
 	choices.push({ label: '$(settings-gear) Edit all in Settings', action: 'settings' });
 
 	const picked = await vscode.window.showQuickPick(choices, {
-		title: 'AI Commit: edit signature',
+		title: 'Komit: edit signature',
 		placeHolder: current.length ? `${current.length} trailer${current.length === 1 ? '' : 's'} configured` : 'No trailers configured',
 	});
 
@@ -117,7 +117,7 @@ export async function editSignature(gitPath: string | undefined, repoRoot: vscod
 			await removeTrailer(current);
 			break;
 		case 'settings':
-			await vscode.commands.executeCommand('workbench.action.openSettings', 'aicommit.signature');
+			await vscode.commands.executeCommand('workbench.action.openSettings', 'komit.signature');
 			break;
 	}
 }
@@ -162,7 +162,7 @@ async function removeTrailer(current: string[]): Promise<void> {
 }
 
 async function saveSignature(lines: string[]): Promise<void> {
-	await vscode.workspace.getConfiguration('aicommit')
+	await vscode.workspace.getConfiguration('komit')
 		.update('signature', lines, vscode.ConfigurationTarget.Global);
 
 	const preview = render(lines.join('\n'), {
@@ -170,6 +170,6 @@ async function saveSignature(lines: string[]): Promise<void> {
 		userHint: '', language: '', styleRules: '', ticket: '<ticket>',
 	});
 	vscode.window.showInformationMessage(lines.length
-		? `AI Commit signature:\n${preview}`
-		: 'AI Commit: signature cleared.');
+		? `Komit signature:\n${preview}`
+		: 'Komit: signature cleared.');
 }

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { getGitAPI, type GitAPI, type GitRepository } from './git/api';
 import { collectContext, hasStagedChanges, resolveRepository } from './git/repository';
-import { AiCommitError, showError } from './errors';
+import { KomitError, showError } from './errors';
 import { normalize } from './normalize';
 import { privacyNotice, signature, styleOptions, ticketFor } from './config';
 import { buildStyleRules } from './prompt/default';
@@ -16,8 +16,8 @@ import type { Provider } from './providers/types';
 import { pickModel, pickProvider, setModel } from './ui/pickers';
 import { runSetup } from './ui/setup';
 
-const STAGED_CONTEXT_KEY = 'aicommit.hasStagedChanges';
-const ACKNOWLEDGED_KEY = 'aicommit.acknowledgedDestinations';
+const STAGED_CONTEXT_KEY = 'komit.hasStagedChanges';
+const ACKNOWLEDGED_KEY = 'komit.acknowledgedDestinations';
 
 const inFlight = new Set<string>();
 
@@ -31,21 +31,21 @@ function currentRepoRoot(): vscode.Uri | undefined {
 
 export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
-		vscode.commands.registerCommand('aicommit.generate', (arg?: { rootUri?: vscode.Uri }) =>
+		vscode.commands.registerCommand('komit.generate', (arg?: { rootUri?: vscode.Uri }) =>
 			generate(context, arg?.rootUri).catch(showError)),
-		vscode.commands.registerCommand('aicommit.regenerate', (arg?: { rootUri?: vscode.Uri }) =>
+		vscode.commands.registerCommand('komit.regenerate', (arg?: { rootUri?: vscode.Uri }) =>
 			generate(context, arg?.rootUri, true).catch(showError)),
-		vscode.commands.registerCommand('aicommit.generatePr', (arg?: { rootUri?: vscode.Uri }) =>
+		vscode.commands.registerCommand('komit.generatePr', (arg?: { rootUri?: vscode.Uri }) =>
 			generatePr(context, arg?.rootUri).catch(showError)),
-		vscode.commands.registerCommand('aicommit.selectProvider', () => selectProvider(context).catch(showError)),
-		vscode.commands.registerCommand('aicommit.selectModel', () => selectModel(context).catch(showError)),
-		vscode.commands.registerCommand('aicommit.openSettings', () =>
-			vscode.commands.executeCommand('workbench.action.openSettings', '@ext:ariefsn.aicommit')),
-		vscode.commands.registerCommand('aicommit.editPrompt', () =>
+		vscode.commands.registerCommand('komit.selectProvider', () => selectProvider(context).catch(showError)),
+		vscode.commands.registerCommand('komit.selectModel', () => selectModel(context).catch(showError)),
+		vscode.commands.registerCommand('komit.openSettings', () =>
+			vscode.commands.executeCommand('workbench.action.openSettings', '@ext:ariefsn.komit')),
+		vscode.commands.registerCommand('komit.editPrompt', () =>
 			editPrompt(currentRepoRoot()).catch(showError)),
-		vscode.commands.registerCommand('aicommit.editSignature', () =>
+		vscode.commands.registerCommand('komit.editSignature', () =>
 			editSignature(gitPath, currentRepoRoot()).catch(showError)),
-		vscode.commands.registerCommand('aicommit.configure', () => configure().catch(showError)),
+		vscode.commands.registerCommand('komit.configure', () => configure().catch(showError)),
 	);
 
 	const api = await getGitAPI();
@@ -65,12 +65,12 @@ async function generate(
 ): Promise<void> {
 	const api = await getGitAPI();
 	if (!api) {
-		throw new AiCommitError('The built-in Git extension is not available.');
+		throw new KomitError('The built-in Git extension is not available.');
 	}
 
 	const repo = resolveRepository(api, rootUri);
 	if (!repo) {
-		throw new AiCommitError('No Git repository is open.');
+		throw new KomitError('No Git repository is open.');
 	}
 
 	const key = repo.rootUri.toString();
@@ -87,7 +87,7 @@ async function generate(
 		return;
 	}
 
-	const config = vscode.workspace.getConfiguration('aicommit');
+	const config = vscode.workspace.getConfiguration('komit');
 	const timeoutMs = (config.get<number>('timeoutSeconds') ?? 90) * 1000;
 	const provider = await createProvider(profile, context.secrets, timeoutMs);
 
@@ -118,7 +118,7 @@ async function run(
 	regenerate = false,
 ): Promise<string | undefined> {
 	const api = await getGitAPI();
-	const config = vscode.workspace.getConfiguration('aicommit');
+	const config = vscode.workspace.getConfiguration('komit');
 
 	const excludeGlobs = [
 		...(config.get<string[]>('excludeGlobs') ?? []),
@@ -133,7 +133,7 @@ async function run(
 	});
 
 	if (!staged.diff && !staged.stat) {
-		throw new AiCommitError('Every staged file is excluded by aicommit.excludeGlobs, so there is nothing to describe.');
+		throw new KomitError('Every staged file is excluded by komit.excludeGlobs, so there is nothing to describe.');
 	}
 
 	const existing = repo.inputBox.value.trim();
@@ -168,7 +168,7 @@ async function run(
 		return undefined;
 	}
 	if (!message) {
-		throw new AiCommitError(`${provider.destination} returned an empty message.`);
+		throw new KomitError(`${provider.destination} returned an empty message.`);
 	}
 
 	return appendSignature(message, signature(), vars);
@@ -178,7 +178,7 @@ async function run(
 async function offerToStageAll(repo: GitRepository): Promise<boolean> {
 	const changes = repo.state.workingTreeChanges;
 	if (changes.length === 0) {
-		throw new AiCommitError('Nothing is staged, and there are no changes to stage.');
+		throw new KomitError('Nothing is staged, and there are no changes to stage.');
 	}
 
 	const choice = await vscode.window.showWarningMessage(
@@ -208,7 +208,7 @@ async function acknowledgeDestination(context: vscode.ExtensionContext, provider
 	}
 
 	const choice = await vscode.window.showWarningMessage(
-		`AI Commit will send your staged diff to ${provider.destination}.`,
+		`Komit will send your staged diff to ${provider.destination}.`,
 		{
 			modal: true,
 			detail: 'This happens every time you generate a message. Common secret files (.env, private keys) are excluded by default, but exclusions only go so far. A secret committed inside an ordinary source file would still be sent.',
@@ -236,9 +236,9 @@ async function selectProvider(context: vscode.ExtensionContext): Promise<void> {
 		return;
 	}
 
-	await vscode.workspace.getConfiguration('aicommit')
+	await vscode.workspace.getConfiguration('komit')
 		.update('activeProvider', picked.id, vscode.ConfigurationTarget.Global);
-	vscode.window.showInformationMessage(`AI Commit: now using ${picked.label}.`);
+	vscode.window.showInformationMessage(`Komit: now using ${picked.label}.`);
 }
 
 async function selectModel(context: vscode.ExtensionContext): Promise<void> {
@@ -250,7 +250,7 @@ async function selectModel(context: vscode.ExtensionContext): Promise<void> {
 	const model = await pickModel(profile, context.secrets);
 	if (model) {
 		await setModel(profile, model);
-		vscode.window.showInformationMessage(`AI Commit: ${profile.label} now uses ${model}.`);
+		vscode.window.showInformationMessage(`Komit: ${profile.label} now uses ${model}.`);
 	}
 }
 

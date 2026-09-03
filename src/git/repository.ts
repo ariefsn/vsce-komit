@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 import * as vscode from 'vscode';
-import { AiCommitError } from '../errors';
+import { KomitError } from '../errors';
 import type { GitAPI, GitRepository } from './api';
 import { toPathspecs } from './pathspec';
 
@@ -198,12 +198,12 @@ export function runGit(gitPath: string, cwd: string, args: string[]): Promise<st
 
 		child.stdout.on('data', chunk => { stdout += chunk; });
 		child.stderr.on('data', chunk => { stderr += chunk; });
-		child.on('error', err => reject(new AiCommitError(`Could not run git: ${err.message}`)));
+		child.on('error', err => reject(new KomitError(`Could not run git: ${err.message}`)));
 		child.on('close', code => {
 			if (code === 0) {
 				resolve(stdout);
 			} else {
-				reject(new AiCommitError(`git ${args[0]} failed: ${stderr.trim() || `exit code ${code}`}`));
+				reject(new KomitError(`git ${args[0]} failed: ${stderr.trim() || `exit code ${code}`}`));
 			}
 		});
 	});

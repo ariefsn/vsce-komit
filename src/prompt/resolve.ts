@@ -3,7 +3,7 @@ import { styleOptions } from '../config';
 import { buildDefaultPrompt } from './default';
 import { hasVariables } from './render';
 
-export const REPO_FILES = ['.aicommit.md', '.github/commit-instructions.md'];
+export const REPO_FILES = ['.komit.md', '.github/commit-instructions.md'];
 
 const CONTEXT_BLOCKS = `
 
@@ -36,7 +36,7 @@ export async function resolvePrompt(repoRoot: vscode.Uri): Promise<string> {
 		}
 	}
 
-	const configured = vscode.workspace.getConfiguration('aicommit').get<string>('prompt');
+	const configured = vscode.workspace.getConfiguration('komit').get<string>('prompt');
 	if (configured && configured.trim()) {
 		return hasVariables(configured) ? configured : configured + CONTEXT_BLOCKS;
 	}

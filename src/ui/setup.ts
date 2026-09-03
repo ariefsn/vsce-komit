@@ -49,8 +49,8 @@ export async function runSetup(secrets: vscode.SecretStorage): Promise<ProviderP
 	items.push({ label: '$(add) Add custom provider…', detail: 'Any OpenAI-compatible endpoint', custom: true });
 
 	const picked = await vscode.window.showQuickPick(items, {
-		title: 'AI Commit: choose a provider',
-		placeHolder: 'Which provider should AI Commit use?',
+		title: 'Komit: choose a provider',
+		placeHolder: 'Which provider should Komit use?',
 		ignoreFocusOut: true,
 	});
 
