@@ -78,10 +78,10 @@ export function buildStyleRules(options: StyleOptions): string {
 
 	switch (options.bodyStyle) {
 		case 'bullets':
-			lines.push(`- Then a blank line, then ${bullets(options.limits.bodyBullets)} starting with "- ", each under ${bulletChars} characters, saying what changed and why.`);
+			lines.push(`- Then a blank line, then ${bullets(options.limits.bodyBullets)} starting with "- ", each on a single line under ${bulletChars} characters, saying what changed and why. Never wrap a bullet onto a second line.`);
 			break;
 		case 'prose':
-			lines.push('- Then a blank line, then one short paragraph explaining what changed and why.');
+			lines.push('- Then a blank line, then one short paragraph explaining what changed and why. Write it as a single line; do not hard-wrap it.');
 			break;
 		case 'none':
 			lines.push('- Output the subject line only. No body.');
