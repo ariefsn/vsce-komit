@@ -19,7 +19,7 @@ Format:
 - Mention test work as one bullet when it is worth mentioning. Do not add a separate section for it.
 
 - Summary states intent, Changes states what was done. Do not restate one in the other.
-- Keep every bullet under ${limits.bulletChars} characters. Output only the title and the two sections.
+- Keep every bullet on one line, under ${limits.bulletChars} characters. Output only the title and the two sections.
 - Write in {{language}}.
 
 Commits on this branch:

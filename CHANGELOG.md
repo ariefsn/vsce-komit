@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.2]
+
+- Stop commit bodies coming back with bullets broken across lines. The character limit now reads as a length target rather than a hint to hard-wrap, and any wrapped line the model still sends is folded back
+- Leave headings, list markers, git trailers and fenced code blocks alone when folding
+
 ## [0.4.1]
 
 - Add Marketplace and Open VSX badges to the README

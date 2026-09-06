@@ -16,11 +16,49 @@ export function normalize(raw: string): string {
 
 	text = stripWrappingQuotes(text.trim());
 
-	return text
+	text = text
 		.split('\n')
 		.map(line => line.replace(/\s+$/, ''))
 		.join('\n')
 		.trim();
+
+	return unwrap(text);
+}
+
+/** Starts a block of its own, so it never continues the line above. */
+const BLOCK_START = /^(?:[-*+]\s|\d+[.)]\s|#|>|[A-Za-z][A-Za-z-]*:\s)/;
+
+/**
+ * Models often satisfy a character limit by hard-wrapping a bullet across
+ * lines. The commit box and `git log` soft-wrap already, so those breaks are
+ * noise: fold every continuation line back onto the line it belongs to.
+ */
+function unwrap(text: string): string {
+	const out: string[] = [];
+	let fenced = false;
+
+	for (const line of text.split('\n')) {
+		if (line.trimStart().startsWith('```')) {
+			fenced = !fenced;
+			out.push(line);
+			continue;
+		}
+
+		const previous = out[out.length - 1];
+		const continuation = !fenced
+			&& line.trim() !== ''
+			&& previous !== undefined
+			&& previous.trim() !== ''
+			&& !BLOCK_START.test(line.trimStart());
+
+		if (continuation) {
+			out[out.length - 1] = `${previous} ${line.trimStart()}`;
+		} else {
+			out.push(line);
+		}
+	}
+
+	return out.join('\n');
 }
 
 function stripCodeFence(text: string): string {
