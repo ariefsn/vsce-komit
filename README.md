@@ -187,7 +187,7 @@ Set `komit.conventionalCommits` to `false`. Messages then follow the style of yo
   "komit.limits.bodyBullets": [2, 4],
   "komit.limits.prSummaryBullets": [1, 2],
   "komit.limits.prChangesBullets": [3, 6],
-  "komit.limits.bulletChars": 80,
+  "komit.limits.bulletChars": 120,
   "komit.limits.subjectChars": 72,
 
   // Prompt and signature

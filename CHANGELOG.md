@@ -1,5 +1,10 @@
 # Change Log
 
+## [0.4.3]
+
+- Drop the trailing commentary and the second, "corrected" message that models sometimes append after the real one
+- Raise the default `komit.limits.bulletChars` to 120, so a bullet naming a file or a symbol no longer collides with the one-line rule
+
 ## [0.4.2]
 
 - Stop commit bodies coming back with bullets broken across lines. The character limit now reads as a length target rather than a hint to hard-wrap, and any wrapped line the model still sends is folded back

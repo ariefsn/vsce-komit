@@ -22,11 +22,16 @@ export function normalize(raw: string): string {
 		.join('\n')
 		.trim();
 
-	return unwrap(text);
+	return stripPostamble(unwrap(text));
 }
 
+const LIST_OR_HEADING = /^(?:[-*+]\s|\d+[.)]\s|#|>)/;
+const TRAILER = /^[A-Za-z][A-Za-z-]*:\s/;
+
 /** Starts a block of its own, so it never continues the line above. */
-const BLOCK_START = /^(?:[-*+]\s|\d+[.)]\s|#|>|[A-Za-z][A-Za-z-]*:\s)/;
+function startsBlock(line: string): boolean {
+	return LIST_OR_HEADING.test(line) || TRAILER.test(line);
+}
 
 /**
  * Models often satisfy a character limit by hard-wrapping a bullet across
@@ -49,7 +54,7 @@ function unwrap(text: string): string {
 			&& line.trim() !== ''
 			&& previous !== undefined
 			&& previous.trim() !== ''
-			&& !BLOCK_START.test(line.trimStart());
+			&& !startsBlock(line.trimStart());
 
 		if (continuation) {
 			out[out.length - 1] = `${previous} ${line.trimStart()}`;
@@ -59,6 +64,56 @@ function unwrap(text: string): string {
 	}
 
 	return out.join('\n');
+}
+
+/**
+ * Openings that only ever introduce the model talking about its own answer.
+ * Words that plausibly open a real body -- "however", "actually", a bare
+ * "revised" -- are deliberately absent.
+ */
+const COMMENTARY = [
+	/^notes?:/i,
+	/^p\.?s\.?\b/i,
+	/^here(?:'s| is)\b/i,
+	/^alternatively\b/i,
+	/^alternative(?: version)?:/i,
+	/^or[,:]\s/i,
+	/^if you (?:prefer|want|need)\b/i,
+	/^(?:sorry|apologies)\b/i,
+	/^let me know\b/i,
+	/^(?:revised|shorter|updated|corrected)\b.*\bversion\b/i,
+];
+
+/**
+ * A model that second-guesses a format rule tends to answer twice: the message,
+ * a line explaining itself, then another message. Keep the first one and drop
+ * everything from the explanation on.
+ */
+function stripPostamble(text: string): string {
+	const lines = text.split('\n');
+	const subject = lines[0]?.trim();
+	let fenced = false;
+
+	for (let i = 1; i < lines.length; i++) {
+		const line = lines[i].trim();
+
+		if (line.startsWith('```')) {
+			fenced = !fenced;
+			continue;
+		}
+
+		// Only a paragraph of its own can be commentary; a bullet is body text.
+		const opensParagraph = line !== '' && lines[i - 1].trim() === '';
+		if (fenced || !opensParagraph || LIST_OR_HEADING.test(line)) {
+			continue;
+		}
+
+		if (line === subject || COMMENTARY.some(marker => marker.test(line))) {
+			return lines.slice(0, i).join('\n').trimEnd();
+		}
+	}
+
+	return text;
 }
 
 function stripCodeFence(text: string): string {
