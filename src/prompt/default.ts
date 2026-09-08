@@ -78,7 +78,7 @@ export function buildStyleRules(options: StyleOptions): string {
 
 	switch (options.bodyStyle) {
 		case 'bullets':
-			lines.push(`- Then a blank line, then ${bullets(options.limits.bodyBullets)} starting with "- ", each on a single line under ${bulletChars} characters, saying what changed and why. Never wrap a bullet onto a second line.`);
+			lines.push(`- Then a blank line, then ${bullets(options.limits.bodyBullets)} starting with "- ", saying what changed and why. One bullet per line: aim for under ${bulletChars} characters, and if a bullet does not fit, shorten it rather than wrapping it onto a second line.`);
 			break;
 		case 'prose':
 			lines.push('- Then a blank line, then one short paragraph explaining what changed and why. Write it as a single line; do not hard-wrap it.');
@@ -88,7 +88,7 @@ export function buildStyleRules(options: StyleOptions): string {
 			break;
 	}
 
-	lines.push('- Output only the commit message. No preamble, no code fences, no quotes.');
+	lines.push('- Output exactly one commit message and nothing else. No preamble, no commentary about these rules, no second or alternative version, no code fences, no quotes.');
 	return lines.join('\n');
 }
 

@@ -3,7 +3,7 @@
   "displayName": "Komit",
   "description": "Generate commit messages and PR descriptions from your changes, using any AI provider.",
   "icon": "assets/icon.png",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "publisher": "ariefsn",
   "license": "MIT",
   "engines": {
@@ -355,7 +355,7 @@
         "komit.limits.bulletChars": {
           "type": "number",
           "minimum": 20,
-          "default": 80,
+          "default": 120,
           "description": "Rough character limit for a single bullet."
         },
         "komit.limits.subjectChars": {

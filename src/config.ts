@@ -20,7 +20,7 @@ export function limits(): Limits {
 		bodyBullets: counts('limits.bodyBullets', [2, 4]),
 		prSummaryBullets: counts('limits.prSummaryBullets', [1, 2]),
 		prChangesBullets: counts('limits.prChangesBullets', [3, 6]),
-		bulletChars: config().get<number>('limits.bulletChars') ?? 80,
+		bulletChars: config().get<number>('limits.bulletChars') ?? 120,
 		subjectChars: config().get<number>('limits.subjectChars') ?? 72,
 	};
 }
