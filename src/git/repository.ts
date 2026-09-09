@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { basename } from 'node:path';
 import * as vscode from 'vscode';
 import { KomitError } from '../errors';
 import type { GitAPI, GitRepository } from './api';
@@ -34,17 +35,96 @@ export function resolveRepository(api: GitAPI, rootUri: vscode.Uri | undefined):
 		return repos[0];
 	}
 
+	return repoOwningActiveEditor(repos) ?? repos[0];
+}
+
+/** Longest matching root wins, so a repository nested inside another still claims its own files. */
+function repoOwningActiveEditor(repos: GitRepository[]): GitRepository | undefined {
 	const active = vscode.window.activeTextEditor?.document.uri;
-	if (active) {
-		const owner = repos
-			.filter(r => active.fsPath.startsWith(r.rootUri.fsPath))
-			.sort((a, b) => b.rootUri.fsPath.length - a.rootUri.fsPath.length)[0];
-		if (owner) {
-			return owner;
+	if (!active) {
+		return undefined;
+	}
+
+	return repos
+		.filter(r => active.fsPath.startsWith(r.rootUri.fsPath))
+		.sort((a, b) => b.rootUri.fsPath.length - a.rootUri.fsPath.length)[0];
+}
+
+/** Folder name of the repository, which is what people call it in conversation. */
+export function repoName(repo: GitRepository): string {
+	return basename(repo.rootUri.fsPath);
+}
+
+/**
+ * Name to put in front of a progress or result message, so that with several
+ * repositories open it is clear which one is running. Undefined for a lone
+ * repository, where the name would be noise.
+ */
+export function repoLabel(api: GitAPI, repo: GitRepository): string | undefined {
+	return api.repositories.length > 1 ? repoName(repo) : undefined;
+}
+
+interface RepoItem extends vscode.QuickPickItem {
+	repo: GitRepository;
+}
+
+/**
+ * Resolves the repository, asking when there is real ambiguity. VS Code exposes
+ * no way to read which Source Control section has focus, so a command invoked
+ * from the palette in a multi-repository workspace has to ask rather than guess.
+ * A command invoked from a repository's own SCM menu carries its rootUri and
+ * never prompts.
+ */
+export async function pickRepository(
+	api: GitAPI,
+	rootUri: vscode.Uri | undefined,
+): Promise<GitRepository | undefined> {
+	const repos = api.repositories;
+	if (repos.length === 0) {
+		return undefined;
+	}
+
+	if (rootUri) {
+		const match = repos.find(r => r.rootUri.toString() === rootUri.toString());
+		if (match) {
+			return match;
 		}
 	}
 
-	return repos[0];
+	if (repos.length === 1) {
+		return repos[0];
+	}
+
+	// Only the editor owner earns the check. resolveRepository's last resort is
+	// "whichever came first", which is exactly the guess this picker exists to
+	// stop making, so it must not be dressed up as a recommendation.
+	const guess = repoOwningActiveEditor(repos);
+	const ordered = [...repos].sort((a, b) => rank(a, guess) - rank(b, guess));
+
+	// detail always renders on a second row, so the check goes in the label.
+	const items: RepoItem[] = ordered.map(repo => ({
+		label: repo === guess ? `$(check) ${repoName(repo)}` : `$(repo) ${repoName(repo)}`,
+		description: [repo.state.HEAD?.name, repo === guess ? 'active editor' : undefined]
+			.filter(Boolean).join(' · '),
+		detail: vscode.workspace.asRelativePath(repo.rootUri, true),
+		repo,
+	}));
+
+	const picked = await vscode.window.showQuickPick(items, {
+		title: 'Komit: which repository?',
+		placeHolder: 'Pick the repository to work on',
+		matchOnDetail: true,
+	});
+
+	return picked?.repo;
+}
+
+/** Best guess first, then repositories with staged changes, then the rest. */
+function rank(repo: GitRepository, guess: GitRepository | undefined): number {
+	if (repo === guess) {
+		return 0;
+	}
+	return hasStagedChanges(repo) ? 1 : 2;
 }
 
 export function hasStagedChanges(repo: GitRepository): boolean {
@@ -103,40 +183,66 @@ export interface BranchContext {
 	branch: string;
 }
 
+export interface BasePreselection {
+	branch: string;
+	/** Where the suggestion came from, shown next to it in the picker. */
+	source: string;
+}
+
 /**
- * Resolves the branch a PR would target. A wrong base quietly produces a
- * description of somebody else's work, so the result is shown to the user.
+ * Suggests the branch a PR would target. A wrong base quietly produces a
+ * description of somebody else's work, so this only pre-selects and the user
+ * confirms. Every candidate is checked against this repository, which is what
+ * lets one workspace hold repositories with different bases: a `komit.baseBranch`
+ * of `dev` simply does not apply to a repository that has no `dev`.
  */
 export async function resolveBaseBranch(
 	gitPath: string,
 	cwd: string,
 	configured: string,
-): Promise<string | undefined> {
-	if (configured.trim()) {
-		return configured.trim();
+	lastUsed: string | undefined,
+): Promise<BasePreselection | undefined> {
+	if (lastUsed?.trim() && await refExists(gitPath, cwd, lastUsed.trim())) {
+		return { branch: lastUsed.trim(), source: 'last used' };
+	}
+
+	if (configured.trim() && await refExists(gitPath, cwd, configured.trim())) {
+		return { branch: configured.trim(), source: 'from komit.baseBranch' };
 	}
 
 	const remoteHead = (await runGit(gitPath, cwd, ['symbolic-ref', 'refs/remotes/origin/HEAD'])
 		.catch(() => '')).trim();
 	if (remoteHead) {
-		return remoteHead.replace('refs/remotes/', '');
+		return { branch: remoteHead.replace('refs/remotes/', ''), source: 'detected' };
 	}
 
 	for (const candidate of ['main', 'master', 'develop']) {
-		const exists = await runGit(gitPath, cwd, ['rev-parse', '--verify', '--quiet', candidate])
-			.then(() => true)
-			.catch(() => false);
-		if (exists) {
-			return candidate;
+		if (await refExists(gitPath, cwd, candidate)) {
+			return { branch: candidate, source: 'detected' };
 		}
 	}
 
 	return undefined;
 }
 
+function refExists(gitPath: string, cwd: string, ref: string): Promise<boolean> {
+	return runGit(gitPath, cwd, ['rev-parse', '--verify', '--quiet', ref])
+		.then(() => true)
+		.catch(() => false);
+}
+
+/**
+ * Local and remote branches. Remotes have to be in here: the detected base is
+ * usually `origin/main`, which `git branch` alone would never list.
+ */
 export async function listBranches(gitPath: string, cwd: string): Promise<string[]> {
-	const out = await runGit(gitPath, cwd, ['branch', '--format=%(refname:short)']).catch(() => '');
-	return out.split('\n').map(l => l.trim()).filter(Boolean);
+	const out = await runGit(gitPath, cwd, [
+		'for-each-ref', '--format=%(refname:short)', 'refs/heads', 'refs/remotes',
+	]).catch(() => '');
+
+	return out.split('\n')
+		.map(l => l.trim())
+		.filter(l => l && !l.endsWith('/HEAD'));
 }
 
 export async function collectBranchContext(

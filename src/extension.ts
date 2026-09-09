@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getGitAPI, type GitAPI, type GitRepository } from './git/api';
-import { collectContext, hasStagedChanges, resolveRepository } from './git/repository';
+import { collectContext, hasStagedChanges, repoLabel, resolveRepository } from './git/repository';
 import { KomitError, showError } from './errors';
 import { normalize } from './normalize';
 import { privacyNotice, signature, styleOptions, ticketFor } from './config';
@@ -95,11 +95,15 @@ async function generate(
 		return;
 	}
 
+	const label = repoLabel(api, repo);
+
 	inFlight.add(key);
 	try {
 		const message = await vscode.window.withProgress({
 			location: vscode.ProgressLocation.SourceControl,
-			title: 'Generating commit message…',
+			// SourceControl progress is not scoped to one provider, so with several
+			// repositories in the view the spinner has to say which one is running.
+			title: `${label ? `[${label}] ` : ''}Generating commit message…`,
 			cancellable: true,
 		}, (_progress, token) => run(repo, provider, token, regenerate));
 

@@ -2,7 +2,14 @@ import * as vscode from 'vscode';
 import { limits } from './config';
 import { KomitError } from './errors';
 import { getGitAPI } from './git/api';
-import { collectBranchContext, listBranches, resolveBaseBranch, resolveRepository } from './git/repository';
+import {
+	collectBranchContext,
+	listBranches,
+	pickRepository,
+	repoLabel,
+	resolveBaseBranch,
+	type BasePreselection,
+} from './git/repository';
 import { normalize } from './normalize';
 import { resolvePrPrompt } from './prompt/pr';
 import { render, type TemplateVars } from './prompt/render';
@@ -15,19 +22,35 @@ export async function generatePr(context: vscode.ExtensionContext, rootUri: vsco
 		throw new KomitError('The built-in Git extension is not available.');
 	}
 
-	const repo = resolveRepository(api, rootUri);
-	if (!repo) {
+	if (api.repositories.length === 0) {
 		throw new KomitError('No Git repository is open.');
+	}
+
+	// Undefined here means the picker was dismissed, which is not an error.
+	const repo = await pickRepository(api, rootUri);
+	if (!repo) {
+		return;
 	}
 
 	const config = vscode.workspace.getConfiguration('komit');
 	const cwd = repo.rootUri.fsPath;
+	const name = repoLabel(api, repo);
+	const prefix = name ? `[${name}] ` : '';
 
-	const base = await resolveBaseBranch(api.git.path, cwd, config.get<string>('baseBranch') ?? '')
-		?? await askForBase(api.git.path, cwd);
+	const suggested = await resolveBaseBranch(
+		api.git.path,
+		cwd,
+		config.get<string>('baseBranch') ?? '',
+		lastBase(context, repo.rootUri),
+	);
+
+	const head = repo.state.HEAD?.name;
+	const base = await askForBase(api.git.path, cwd, suggested, [name, head].filter(Boolean).join(' · '));
 	if (!base) {
 		return;
 	}
+
+	await rememberBase(context, repo.rootUri, base);
 
 	const profile = getActiveProfile() ?? await runSetup(context.secrets);
 	if (!profile) {
@@ -38,7 +61,7 @@ export async function generatePr(context: vscode.ExtensionContext, rootUri: vsco
 
 	const description = await vscode.window.withProgress({
 		location: vscode.ProgressLocation.Notification,
-		title: `Generating PR description against ${base}…`,
+		title: `${prefix}Generating PR description against ${base}…`,
 		cancellable: true,
 	}, async (_progress, token) => {
 		const branch = await collectBranchContext(api.git.path, repo, base, {
@@ -51,7 +74,7 @@ export async function generatePr(context: vscode.ExtensionContext, rootUri: vsco
 		});
 
 		if (branch.commits.length === 0) {
-			throw new KomitError(`This branch has no commits that ${base} does not already have.`);
+			throw new KomitError(`${prefix}This branch has no commits that ${base} does not already have.`);
 		}
 
 		const vars: TemplateVars = {
@@ -80,17 +103,62 @@ export async function generatePr(context: vscode.ExtensionContext, rootUri: vsco
 	await vscode.env.clipboard.writeText(description);
 	const document = await vscode.workspace.openTextDocument({ content: description, language: 'markdown' });
 	await vscode.window.showTextDocument(document, { preview: false });
-	vscode.window.showInformationMessage('Komit: PR description copied to the clipboard.');
+	vscode.window.showInformationMessage(
+		name
+			? `Komit: PR description for ${name} copied to the clipboard.`
+			: 'Komit: PR description copied to the clipboard.',
+	);
 }
 
-async function askForBase(gitPath: string, cwd: string): Promise<string | undefined> {
+interface BranchItem extends vscode.QuickPickItem {
+	branch: string;
+}
+
+/**
+ * Confirms the base on every run. A wrong base quietly describes somebody else's
+ * work, and the suggestion is only ever a guess, so it goes in front of the user
+ * as the first item: Enter accepts it, typing retargets it.
+ */
+async function askForBase(
+	gitPath: string,
+	cwd: string,
+	suggested: BasePreselection | undefined,
+	from: string,
+): Promise<string | undefined> {
 	const branches = await listBranches(gitPath, cwd);
 	if (branches.length === 0) {
 		throw new KomitError('Could not work out which branch to compare against. Set komit.baseBranch.');
 	}
 
-	return vscode.window.showQuickPick(branches, {
-		title: 'Compare this branch against',
-		placeHolder: 'Pick the base branch for the pull request',
+	const rest: BranchItem[] = branches
+		.filter(b => b !== suggested?.branch)
+		.map(branch => ({ label: `$(git-branch) ${branch}`, branch }));
+
+	const items: BranchItem[] = suggested
+		? [
+			{ label: `$(check) ${suggested.branch}`, description: suggested.source, branch: suggested.branch },
+			{ label: '', kind: vscode.QuickPickItemKind.Separator, branch: '' },
+			...rest,
+		]
+		: rest;
+
+	const picked = await vscode.window.showQuickPick(items, {
+		title: from ? `Base branch for the PR from ${from}` : 'Base branch for the pull request',
+		placeHolder: 'Enter accepts the suggestion, or pick another branch',
+		matchOnDescription: true,
 	});
+
+	return picked?.branch;
+}
+
+const LAST_BASE_KEY = 'komit.lastBaseBranch';
+
+function lastBase(context: vscode.ExtensionContext, rootUri: vscode.Uri): string | undefined {
+	return context.workspaceState.get<Record<string, string>>(LAST_BASE_KEY)?.[rootUri.toString()];
+}
+
+/** Keyed per repository, so repositories with different bases do not fight. */
+function rememberBase(context: vscode.ExtensionContext, rootUri: vscode.Uri, base: string): Thenable<void> {
+	const stored = context.workspaceState.get<Record<string, string>>(LAST_BASE_KEY) ?? {};
+	return context.workspaceState.update(LAST_BASE_KEY, { ...stored, [rootUri.toString()]: base });
 }
