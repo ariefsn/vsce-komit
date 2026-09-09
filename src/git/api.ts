@@ -9,6 +9,7 @@ export interface GitChange {
 export interface GitRepositoryState {
 	readonly indexChanges: GitChange[];
 	readonly workingTreeChanges: GitChange[];
+	readonly HEAD: { readonly name?: string } | undefined;
 	readonly onDidChange: vscode.Event<void>;
 }
 

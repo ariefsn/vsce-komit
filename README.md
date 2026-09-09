@@ -84,6 +84,8 @@ If an endpoint has no model catalogue, the picker quietly falls back to typing t
 
 **Komit: Generate PR Description** writes the title and body for a whole branch, opens it in a Markdown editor and copies it to the clipboard, so it works with the GitHub web UI, the `gh` CLI, or anything else.
 
+It asks which branch to compare against, with the detected base already selected — press Enter to take it, or type to target `develop` or a release branch instead. Your choice is remembered per repository. In a workspace with several repositories it also asks which one, unless you launch it from that repository's `⋯` menu in the Source Control view, which is unambiguous.
+
 ```markdown
 feat(PAP-51): rework auth with token refresh
 

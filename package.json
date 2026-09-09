@@ -3,7 +3,7 @@
   "displayName": "Komit",
   "description": "Generate commit messages and PR descriptions from your changes, using any AI provider.",
   "icon": "assets/icon.png",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "publisher": "ariefsn",
   "license": "MIT",
   "engines": {
@@ -151,6 +151,16 @@
         {
           "command": "komit.generate",
           "group": "navigation@-1",
+          "when": "scmProvider == git"
+        },
+        {
+          "command": "komit.generatePr",
+          "group": "komit@1",
+          "when": "scmProvider == git"
+        },
+        {
+          "command": "komit.regenerate",
+          "group": "komit@2",
           "when": "scmProvider == git"
         }
       ],
@@ -386,7 +396,7 @@
         "komit.baseBranch": {
           "type": "string",
           "default": "",
-          "markdownDescription": "Branch that pull requests target. Leave it empty to detect it from `origin/HEAD`, then `main`, `master` or `develop`."
+          "markdownDescription": "Branch pre-selected in the base branch picker. It is ignored in a repository that does not have that branch, which then falls back to its own `origin/HEAD`, then `main`, `master` or `develop`. Detection is per repository, so a workspace can hold repositories with different bases."
         },
         "komit.prPrompt": {
           "type": "string",

@@ -1,5 +1,15 @@
 # Change Log
 
+## [0.5.0]
+
+- Ask which repository to describe when a workspace holds more than one, instead of silently taking the first. VS Code does not let an extension read which Source Control section has focus, so the picker is the only honest answer for a Command Palette invocation
+- Add **Generate PR Description** and **Regenerate Commit Message** to each repository's `⋯` menu in the Source Control view. Launched from there they never ask, because the repository is unambiguous
+- Name the repository in the progress notification and in the "copied to the clipboard" message when more than one is open. `Generating PR description against origin/main…` never said which repo it meant
+- Confirm the base branch on every PR, with the detected one already selected: Enter accepts it, typing targets `develop` or a release branch instead. It was previously fixed to `origin/HEAD` unless you edited a setting and remembered to change it back
+- Remember the base per repository, so the second PR from the same repository is still one keystroke
+- Check `komit.baseBranch` against each repository before applying it. It is one setting shared by the whole workspace, so a workspace where one repository targets `main` and another targets `dev` could not be served at all; it is now ignored where that branch does not exist and the repository falls back to its own default
+- List remote branches when picking a base. Only local branches were listed, so the picker could not offer `origin/main` — the very branch usually wanted
+
 ## [0.4.3]
 
 - Drop the trailing commentary and the second, "corrected" message that models sometimes append after the real one
